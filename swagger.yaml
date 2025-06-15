@@ -1361,5 +1361,5 @@ security:
   - bearerAuth: []
 
 servers:
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/
+  - description: Test server
+    url: https://delicate-minnow-enhanced.ngrok-free.app/
