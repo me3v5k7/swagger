@@ -5,11 +5,7 @@ info:
   title: Standpoint API
   contact:
     email: you@your-company.com
-#tags:
-#  - name: admins
-#    description: Secured Admin-only calls
-#  - name: developers
-#    description: Operations available to regular developers
+
 paths:
   /page/main:
     get:
@@ -34,12 +30,687 @@ paths:
                 items:
                   $ref: '#/components/schemas/EventMainPageInfo'
 
+  /client/all:
+    get:
+      summary: Get all clients with pagination
+      operationId: getAllClients
+      parameters:
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            maximum: 40
+            default: 8
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientList'
+
+  /client:
+    post:
+      summary: Create a new client
+      operationId: createClient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreate'
+      responses:
+        '201':
+          description: Client created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateResponse'
+
+  /client/{id}:
+    get:
+      summary: Get client by ID
+      operationId: getClient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDetails'
+
+    put:
+      summary: Update client completely
+      operationId: updateClient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdate'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+    patch:
+      summary: Partially update client
+      operationId: patchClient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientPatch'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResponse'
+
+    delete:
+      summary: Delete client
+      operationId: deleteClient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /client/{id}/logo:
+    post:
+      summary: Upload client logo
+      operationId: uploadClientLogo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Logo uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadImageResponse'
+
+  /client/{clientId}/address:
+    post:
+      summary: Create address for client
+      operationId: createAddress
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreate'
+      responses:
+        '201':
+          description: Address created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+  /client/{clientId}/address/{id}:
+    get:
+      summary: Get address by ID
+      operationId: getAddress
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+    put:
+      summary: Update address
+      operationId: updateAddress
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreate'
+      responses:
+        '200':
+          description: Address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+    delete:
+      summary: Delete address
+      operationId: deleteAddress
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Address deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /client/{clientId}/contact_person:
+    post:
+      summary: Create contact person for client
+      operationId: createContactPerson
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPersonCreate'
+      responses:
+        '201':
+          description: Contact person created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPerson'
+
+  /client/{clientId}/contact_person/{id}:
+    get:
+      summary: Get contact person by ID
+      operationId: getContactPerson
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPersonDetails'
+
+    put:
+      summary: Update contact person
+      operationId: updateContactPerson
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPersonUpdate'
+      responses:
+        '200':
+          description: Contact person updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+    delete:
+      summary: Delete contact person
+      operationId: deleteContactPerson
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Contact person deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /client/{clientId}/company_details:
+    post:
+      summary: Create company details for client
+      operationId: createCompanyDetails
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyDetailsCreate'
+      responses:
+        '201':
+          description: Company details created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
+
+  /client/{clientId}/company_details/{id}:
+    get:
+      summary: Get company details by ID
+      operationId: getCompanyDetails
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
+
+    put:
+      summary: Update company details
+      operationId: updateCompanyDetails
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyDetailsCreate'
+      responses:
+        '200':
+          description: Company details updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
+
+    delete:
+      summary: Delete company details
+      operationId: deleteCompanyDetails
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Company details deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /client/{clientId}/comment:
+    post:
+      summary: Create comment for client
+      operationId: createCompanyComment
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  /client/{clientId}/comment/{id}:
+    get:
+      summary: Get comment by ID
+      operationId: getCompanyComment
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetails'
+
+    put:
+      summary: Update comment
+      operationId: updateCompanyComment
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '200':
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+    delete:
+      summary: Delete comment
+      operationId: deleteCompanyComment
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /image/{id}:
+    get:
+      summary: Get image by ID
+      operationId: getImage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Image data
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+
+  /auth/login:
+    post:
+      summary: User login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      operationId: logout
+      responses:
+        '204':
+          description: Logout successful
+
+  /auth/user_info:
+    get:
+      summary: Get current user info
+      operationId: userInfo
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+
+  /enum/company_entity_types:
+    get:
+      summary: Get company entity types enum
+      operationId: getCompanyEntityTypes
+      responses:
+        '200':
+          description: List of company entity types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["organiser", "exhibition center", "client"]
+
+  /enum/client_types:
+    get:
+      summary: Get client types enum
+      operationId: getClientTypes
+      responses:
+        '200':
+          description: List of client types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["public", "private"]
+
+  /enum/project_categories:
+    get:
+      summary: Get project categories enum
+      operationId: getProjectCategories
+      responses:
+        '200':
+          description: List of project categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["exclusive", "standart", "pidvis"]
+
+  /enum/project_statuses:
+    get:
+      summary: Get project statuses enum
+      operationId: getProjectStatuses
+      responses:
+        '200':
+          description: List of project statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["waiting for contact", "initial negotiations", "technical requirements formed", "design approved", "estimate approved", "contract signed", "blueprints ready", "materials ordered", "materials received", "installation in progress", "stand delivered", "payments closed", "cancelled", "not participating"]
+
+  /enum/managers:
+    get:
+      summary: Get list of managers
+      operationId: getManagers
+      responses:
+        '200':
+          description: List of managers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Manager'
+
 components:
   securitySchemes:
-    bearerAuth: # arbitrary name for the security scheme
+    bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT # optional, arbitrary value for documentation purposes
+      bearerFormat: JWT
+
   schemas:
     EventDates:
       type: object
@@ -86,7 +757,7 @@ components:
           type: string
           example: "Форум стартапів Довга назва 2025"
         organizer:
-          type: object #TODO: Add schema
+          type: object
         event_dates:
           $ref: '#/components/schemas/EventDates'
 
@@ -105,14 +776,13 @@ components:
               properties:
                 counter:
                   $ref: '#/components/schemas/CategoriesCounter'
-                
                 managers:
                   type: array
                   items:
                     type: object
                     properties:
                       manager:
-                        type: object #TODO: Add schema
+                        type: object
                       counter:
                         $ref: '#/components/schemas/CategoriesCounter'
                       projects:
@@ -121,6 +791,7 @@ components:
                           $ref: '#/components/schemas/Project'
             exclusive:
               type: object
+
     Project:
       type: object
       properties:
@@ -142,12 +813,12 @@ components:
           type: string
           example: "Первинні переговори"
         manager:
-          type: object #TODO: Add schema
+          type: object
         budget:
           type: array
           items:
             $ref: '#/components/schemas/ProjectBudget'
-        
+
     ProjectBudget:
       type: object
       properties:
@@ -163,7 +834,7 @@ components:
         exchange_rate:
           type: integer
           example: 100
-    
+
     CategoriesCounter:
       type: object
       properties:
@@ -179,10 +850,516 @@ components:
         canceled:
           type: integer
           example: 4
+
+    ClientList:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Компанія ABC"
+        client_type:
+          type: string
+          example: "public"
+        website:
+          type: string
+          example: "https://company.com"
+        manager_user_id:
+          type: integer
+          example: 1
+        manager_user_name:
+          type: string
+          example: "Іван Петров"
+        contact_persons:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: "Марія Коваленко"
+              email:
+                type: string
+                example: "maria@company.com"
+        project_id:
+          type: integer
+          example: 5
+        project_name:
+          type: string
+          example: "Проект ABC"
+        last_event_name:
+          type: string
+          example: "Форум 2025"
+        date_add_con_start:
+          type: string
+          format: date
+          example: "2025-05-11"
+        date_add_decon_end:
+          type: string
+          format: date
+          example: "2025-05-18"
+
+    ClientCreate:
+      type: object
+      properties:
+        client_type:
+          type: string
+          example: "public"
+        name:
+          type: string
+          example: "Нова компанія"
+        description:
+          type: string
+          example: "Опис компанії"
+        phone_number:
+          type: string
+          example: "+380501234567"
+        email:
+          type: string
+          example: "info@company.com"
+        website:
+          type: string
+          example: "https://company.com"
+        manager_user_id:
+          type: integer
+          example: 1
+
+    ClientPatch:
+      type: object
+      properties:
+        client_type:
+          type: string
+          example: "public"
+        name:
+          type: string
+          example: "Оновлена назва"
+        description:
+          type: string
+          example: "Оновлений опис"
+        phone_number:
+          type: string
+          example: "+380501234567"
+        email:
+          type: string
+          example: "new@company.com"
+        website:
+          type: string
+          example: "https://newcompany.com"
+        manager_user_id:
+          type: integer
+          example: 2
+
+    ClientUpdate:
+      type: object
+      properties:
+        client:
+          $ref: '#/components/schemas/ClientPatch'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPersonWithContacts'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressCreate'
+        company_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyDetailsCreate'
+
+    ClientDetails:
+      type: object
+      properties:
+        client:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            type:
+              type: string
+              example: "client"
+            client_type:
+              type: string
+              example: "public"
+            name:
+              type: string
+              example: "Компанія ABC"
+            description:
+              type: string
+              example: "Опис компанії"
+            phone_number:
+              type: string
+              example: "+380501234567"
+            email:
+              type: string
+              example: "info@company.com"
+            website:
+              type: string
+              example: "https://company.com"
+            manager_user_id:
+              type: integer
+              example: 1
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPersonWithContacts'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        company_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyDetails'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDetails'
+
+    Address:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        country:
+          type: string
+          example: "Україна"
+        city:
+          type: string
+          example: "Київ"
+        address:
+          type: string
+          example: "вул. Хрещатик, 1"
+        google_maps_link:
+          type: string
+          example: "https://maps.google.com/..."
+        comment:
+          type: string
+          example: "Головний офіс"
+
+    AddressCreate:
+      type: object
+      properties:
+        country:
+          type: string
+          example: "Україна"
+        city:
+          type: string
+          example: "Київ"
+        address:
+          type: string
+          example: "вул. Хрещатик, 1"
+        google_maps_link:
+          type: string
+          example: "https://maps.google.com/..."
+        comment:
+          type: string
+          example: "Головний офіс"
+
+    ContactPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Марія Коваленко"
+        company_entity_id:
+          type: integer
+          example: 1
+
+    ContactPersonCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Марія Коваленко"
+
+    ContactPersonDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Марія Коваленко"
+        company_entity_id:
+          type: integer
+          example: 1
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              phone:
+                type: string
+                example: "+380501234567"
+              comment:
+                type: string
+                example: "Робочий"
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                example: "maria@company.com"
+              comment:
+                type: string
+                example: "Основний"
+
+    ContactPersonWithContacts:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Марія Коваленко"
+        company_entity_id:
+          type: integer
+          example: 1
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              phone_number:
+                type: string
+                example: "+380501234567"
+              comment:
+                type: string
+                example: "Робочий"
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              email:
+                type: string
+                example: "maria@company.com"
+              comment:
+                type: string
+                example: "Основний"
+
+    ContactPersonUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Марія Коваленко"
+        company_entity_id:
+          type: integer
+          example: 1
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              phone:
+                type: string
+                example: "+380501234567"
+              comment:
+                type: string
+                example: "Робочий"
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                example: "maria@company.com"
+              comment:
+                type: string
+                example: "Основний"
+
+    CompanyDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "ТОВ Компанія ABC"
+        address:
+          type: string
+          example: "01001, м. Київ, вул. Хрещатик, 1"
+        payment_details:
+          type: string
+          example: "ЄДРПОУ: 12345678, р/р: 26001234567890"
+        comment:
+          type: string
+          example: "Основні реквізити"
+
+    CompanyDetailsCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "ТОВ Компанія ABC"
+        address:
+          type: string
+          example: "01001, м. Київ, вул. Хрещатик, 1"
+        payment_details:
+          type: string
+          example: "ЄДРПОУ: 12345678, р/р: 26001234567890"
+        comment:
+          type: string
+          example: "Основні реквізити"
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        comment:
+          type: string
+          example: "Важливий клієнт"
+        company_entity_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+
+    CommentCreate:
+      type: object
+      properties:
+        comment:
+          type: string
+          example: "Важливий клієнт"
+
+    CommentDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        comment:
+          type: string
+          example: "Важливий клієнт"
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Іван Петров"
+            avatar_image_file_id:
+              type: integer
+              example: 5
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Іван Петров"
+        token:
+          type: string
+          example: "abc123-def456-ghi789"
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Іван Петров"
+
+    Manager:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Іван Петров"
+        avatar_image_file_id:
+          type: integer
+          example: 5
+
+    CreateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Client company created successfully"
+        companyId:
+          type: integer
+          example: 1
+
+    UpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Client updated successfully"
+        client:
+          type: object
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    UploadImageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Logo uploaded successfully"
+        imageId:
+          type: integer
+          example: 5
+
 security:
-  - bearerAuth: [] # use the same name as above
+  - bearerAuth: []
 
 servers:
-  # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/rtfggf/StandPointAPI/1.0.0
+    url: https://virtserver.swaggerhub.com/
