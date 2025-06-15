@@ -185,13 +185,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/UploadImageResponse'
 
-  /client/{clientId}/address:
+  /company_entity/address:
     post:
       summary: Create address for client
       operationId: createAddress
       parameters:
-        - in: path
-          name: clientId
+        - in: query
+          name: companyEntityId
           required: true
           schema:
             type: integer
@@ -209,16 +209,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Address'
 
-  /client/{clientId}/address/{id}:
+  /company_entity/address/{id}:
     get:
       summary: Get address by ID
       operationId: getAddress
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -236,11 +231,6 @@ paths:
       summary: Update address
       operationId: updateAddress
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -265,11 +255,6 @@ paths:
       operationId: deleteAddress
       parameters:
         - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
-        - in: path
           name: id
           required: true
           schema:
@@ -282,13 +267,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
-  /client/{clientId}/contact_person:
+  /company_entity/contact_person:
     post:
       summary: Create contact person for client
       operationId: createContactPerson
       parameters:
-        - in: path
-          name: clientId
+        - in: query
+          name: companyEntityId
           required: true
           schema:
             type: integer
@@ -306,16 +291,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ContactPerson'
 
-  /client/{clientId}/contact_person/{id}:
+  /company_entity/contact_person/{id}:
     get:
       summary: Get contact person by ID
       operationId: getContactPerson
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -333,11 +313,6 @@ paths:
       summary: Update contact person
       operationId: updateContactPerson
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -362,11 +337,6 @@ paths:
       operationId: deleteContactPerson
       parameters:
         - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
-        - in: path
           name: id
           required: true
           schema:
@@ -379,13 +349,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
-  /client/{clientId}/company_details:
+  /company_entity/details:
     post:
       summary: Create company details for client
       operationId: createCompanyDetails
       parameters:
-        - in: path
-          name: clientId
+        - in: query
+          name: companyEntityId
           required: true
           schema:
             type: integer
@@ -403,16 +373,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CompanyDetails'
 
-  /client/{clientId}/company_details/{id}:
+  /company_entity/details/{id}:
     get:
       summary: Get company details by ID
       operationId: getCompanyDetails
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -430,11 +395,6 @@ paths:
       summary: Update company details
       operationId: updateCompanyDetails
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -459,11 +419,6 @@ paths:
       operationId: deleteCompanyDetails
       parameters:
         - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
-        - in: path
           name: id
           required: true
           schema:
@@ -476,13 +431,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
-  /client/{clientId}/comment:
+  /company_entity/comment:
     post:
       summary: Create comment for client
       operationId: createCompanyComment
       parameters:
-        - in: path
-          name: clientId
+        - in: query
+          name: companyEntityId
           required: true
           schema:
             type: integer
@@ -500,16 +455,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Comment'
 
-  /client/{clientId}/comment/{id}:
+  /company_entity/comment/{id}:
     get:
       summary: Get comment by ID
       operationId: getCompanyComment
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -527,11 +477,6 @@ paths:
       summary: Update comment
       operationId: updateCompanyComment
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -555,11 +500,6 @@ paths:
       summary: Delete comment
       operationId: deleteCompanyComment
       parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: integer
         - in: path
           name: id
           required: true
@@ -866,12 +806,20 @@ components:
         website:
           type: string
           example: "https://company.com"
-        manager_user_id:
-          type: integer
-          example: 1
-        manager_user_name:
-          type: string
-          example: "Іван Петров"
+        manager_user:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              example: 3
+            name:
+              type: string
+              example: "Іван Петров"
+            avatar_image_file_id:
+              type: integer
+              nullable: true
+              example: 42
         contact_persons:
           type: array
           items:
@@ -879,35 +827,63 @@ components:
             properties:
               id:
                 type: integer
-                example: 1
+                example: 10
               name:
                 type: string
                 example: "Марія Коваленко"
-              email:
-                type: string
-                example: "maria@company.com"
+              company_entity_id:
+                type: integer
+                example: 1
+              phones:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    phone:
+                      type: string
+                      example: "+380501234567"
+                    comment:
+                      type: string
+                      example: "Мобільний"
+              emails:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      example: "maria@company.com"
+                    comment:
+                      type: string
+                      example: "Робочий"
         project_id:
           type: integer
+          nullable: true
           example: 5
         project_name:
           type: string
+          nullable: true
           example: "Проект ABC"
         last_event_name:
           type: string
+          nullable: true
           example: "Форум 2025"
         date_add_con_start:
           type: string
           format: date
+          nullable: true
           example: "2025-05-11"
         date_add_decon_end:
           type: string
           format: date
+          nullable: true
           example: "2025-05-18"
+
 
     ClientCreate:
       type: object
       properties:
-        client_type:
+        clientType:
           type: string
           example: "public"
         name:
@@ -916,7 +892,7 @@ components:
         description:
           type: string
           example: "Опис компанії"
-        phone_number:
+        phoneNumber:
           type: string
           example: "+380501234567"
         email:
@@ -925,14 +901,14 @@ components:
         website:
           type: string
           example: "https://company.com"
-        manager_user_id:
+        managerUserId:
           type: integer
           example: 1
 
     ClientPatch:
       type: object
       properties:
-        client_type:
+        clientType:
           type: string
           example: "public"
         name:
@@ -941,7 +917,7 @@ components:
         description:
           type: string
           example: "Оновлений опис"
-        phone_number:
+        phoneNumber:
           type: string
           example: "+380501234567"
         email:
@@ -950,7 +926,7 @@ components:
         website:
           type: string
           example: "https://newcompany.com"
-        manager_user_id:
+        managerUserId:
           type: integer
           example: 2
 
@@ -959,7 +935,7 @@ components:
       properties:
         client:
           $ref: '#/components/schemas/ClientPatch'
-        contact_persons:
+        contactPersons:
           type: array
           items:
             $ref: '#/components/schemas/ContactPersonWithContacts'
@@ -967,7 +943,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AddressCreate'
-        company_details:
+        companyDetails:
           type: array
           items:
             $ref: '#/components/schemas/CompanyDetailsCreate'
@@ -1056,7 +1032,7 @@ components:
         address:
           type: string
           example: "вул. Хрещатик, 1"
-        google_maps_link:
+        googleMapsLink:
           type: string
           example: "https://maps.google.com/..."
         comment:
@@ -1092,7 +1068,7 @@ components:
         name:
           type: string
           example: "Марія Коваленко"
-        company_entity_id:
+        companyEntityId:
           type: integer
           example: 1
         phones:
@@ -1165,7 +1141,7 @@ components:
         name:
           type: string
           example: "Марія Коваленко"
-        company_entity_id:
+        companyEntityId:
           type: integer
           example: 1
         phones:
@@ -1219,7 +1195,7 @@ components:
         address:
           type: string
           example: "01001, м. Київ, вул. Хрещатик, 1"
-        payment_details:
+        paymentDetails:
           type: string
           example: "ЄДРПОУ: 12345678, р/р: 26001234567890"
         comment:
@@ -1327,7 +1303,7 @@ components:
         message:
           type: string
           example: "Client company created successfully"
-        companyId:
+        clientId:
           type: integer
           example: 1
 
