@@ -1058,6 +1058,31 @@ components:
         name:
           type: string
           example: "Марія Коваленко"
+        companyEntityId:
+          type: integer
+          example: 1
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              phone:
+                type: string
+                example: "+380501234567"
+              comment:
+                type: string
+                example: "Робочий"
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                example: "maria@company.com"
+              comment:
+                type: string
+                example: "Основний"
 
     ContactPersonDetails:
       type: object
