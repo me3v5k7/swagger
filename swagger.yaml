@@ -1,25 +1,109 @@
 openapi: 3.0.0
 info:
-  description: This is a simple API
+  description: This is the API documentation for the Standpoint application.
   version: "1.0.0"
   title: Standpoint API
   contact:
     email: you@your-company.com
 
+servers:
+  - description: Test server
+    url: https://delicate-minnow-enhanced.ngrok-free.app/
+
+tags:
+  - name: Authentication
+    description: User authentication operations.
+  - name: Page
+    description: Endpoints for aggregated page data.
+  - name: Clients
+    description: Operations related to clients.
+  - name: Exhibition Centers
+    description: Operations related to exhibition centers.
+  - name: Suppliers
+    description: Operations related to suppliers and their tags.
+  - name: Company Entity
+    description: Shared operations for company entities like addresses, comments, and logos.
+  - name: Enums
+    description: Endpoints to retrieve enumeration values.
+  - name: Images
+    description: Operations for retrieving images.
+
 paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Logout successful
+
+  /auth/user_info:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user info
+      operationId: userInfo
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '401':
+          description: Unauthorized
+
   /page/main:
     get:
-      summary: Надає інформацію про головну сторіеку
+      tags:
+        - Page
+      summary: Provides information for the main page within a date range
       operationId: getPageMain
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: dateFrom
+          required: true
           schema:
             type: string
+            format: date
+            example: "2025-01-01"
         - in: query
           name: dateTo
+          required: true
           schema:
             type: string
+            format: date
+            example: "2025-12-31"
       responses:
         '200':
           description: OK
@@ -32,8 +116,12 @@ paths:
 
   /client/all:
     get:
-      summary: Get all clients with pagination
+      tags:
+        - Clients
+      summary: Get all clients with filtering and pagination
       operationId: getAllClients
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: pageSize
@@ -47,9 +135,56 @@ paths:
             type: integer
             minimum: 1
             default: 1
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: clientType
+          schema:
+            type: string
+        - in: query
+          name: managerId
+          schema:
+            type: integer
+        - in: query
+          name: lastProjectId
+          schema:
+            type: integer
+        - in: query
+          name: lastProjectName
+          schema:
+            type: string
+        - in: query
+          name: lastEventName
+          schema:
+            type: string
+        - in: query
+          name: lastEventId
+          schema:
+            type: integer
+        - in: query
+          name: lastEventDateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: lastEventDateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: anyEventId
+          schema:
+            type: integer
+        - in: query
+          name: search
+          description: General search term across multiple fields.
+          schema:
+            type: string
       responses:
         '200':
-          description: OK
+          description: A list of clients.
           content:
             application/json:
               schema:
@@ -59,8 +194,12 @@ paths:
 
   /client:
     post:
+      tags:
+        - Clients
       summary: Create a new client
       operationId: createClient
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -73,12 +212,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateResponse'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  clientId:
+                    type: integer
 
   /client/{id}:
     get:
+      tags:
+        - Clients
       summary: Get client by ID
       operationId: getClient
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -92,33 +240,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClientDetails'
-
-    # put:
-    #   summary: Update client completely
-    #   operationId: updateClient
-    #   parameters:
-    #     - in: path
-    #       name: id
-    #       required: true
-    #       schema:
-    #         type: integer
-    #   requestBody:
-    #     required: true
-    #     content:
-    #       application/json:
-    #         schema:
-    #           $ref: '#/components/schemas/ClientUpdate'
-    #   responses:
-    #     '200':
-    #       description: Client updated successfully
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: '#/components/schemas/MessageResponse'
-
     patch:
+      tags:
+        - Clients
       summary: Partially update client
       operationId: patchClient
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -138,10 +266,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateResponse'
-
     delete:
+      tags:
+        - Clients
       summary: Delete client
       operationId: deleteClient
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -156,13 +287,453 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
-  /client/{id}/logo:
+  /exhibition_center/all:
+    get:
+      tags:
+        - Exhibition Centers
+      summary: Get all exhibition centers with filtering and pagination
+      operationId: getAllExhibitionCenters
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            maximum: 40
+            default: 8
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: managerId
+          schema:
+            type: integer
+        - in: query
+          name: lastEventName
+          schema:
+            type: string
+        - in: query
+          name: lastEventId
+          schema:
+            type: integer
+        - in: query
+          name: lastEventDateFrom
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: lastEventDateTo
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: anyEventId
+          schema:
+            type: integer
+        - in: query
+          name: search
+          description: General search term across multiple fields.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of exhibition centers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExhibitionCenterList'
+
+  /exhibition_center:
     post:
-      summary: Upload client logo
-      operationId: uploadClientLogo
+      tags:
+        - Exhibition Centers
+      summary: Create a new exhibition center
+      operationId: createExhibitionCenter
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionCenterCreate'
+      responses:
+        '201':
+          description: Exhibition Center created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  exhibitionCenterId:
+                    type: integer
+
+  /exhibition_center/{id}:
+    get:
+      tags:
+        - Exhibition Centers
+      summary: Get exhibition center by ID
+      operationId: getExhibitionCenter
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionCenterDetails'
+    patch:
+      tags:
+        - Exhibition Centers
+      summary: Partially update exhibition center
+      operationId: patchExhibitionCenter
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionCenterCreate'
+      responses:
+        '200':
+          description: Exhibition Center updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResponse'
+    delete:
+      tags:
+        - Exhibition Centers
+      summary: Delete exhibition center
+      operationId: deleteExhibitionCenter
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Exhibition Center deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /supplier/all:
+    get:
+      tags:
+        - Suppliers
+      summary: Get all suppliers with filtering and pagination
+      operationId: getAllSuppliers
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 8
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: managerId
+          schema:
+            type: integer
+        - in: query
+          name: tags
+          description: Comma-separated list of tag IDs to filter by.
+          schema:
+            type: string
+            example: "1,5,12"
+        - in: query
+          name: search
+          description: General search term across multiple fields.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of suppliers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupplierList'
+
+  /supplier:
+    post:
+      tags:
+        - Suppliers
+      summary: Create a new supplier
+      operationId: createSupplier
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierCreate'
+      responses:
+        '201':
+          description: Supplier created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  supplierId:
+                    type: integer
+
+  /supplier/{id}:
+    get:
+      tags:
+        - Suppliers
+      summary: Get supplier by ID
+      operationId: getSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierDetails'
+    patch:
+      tags:
+        - Suppliers
+      summary: Partially update supplier
+      operationId: patchSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierPatch'
+      responses:
+        '200':
+          description: Supplier updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResponse'
+    delete:
+      tags:
+        - Suppliers
+      summary: Delete supplier
+      operationId: deleteSupplier
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supplier deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /supplier/{id}/tags:
+    put:
+      tags:
+        - Suppliers
+      summary: Update tags for a supplier
+      description: Replaces all existing tags for a supplier with the new set of tags.
+      operationId: updateSupplierTags
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tagIds:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 5, 12]
+      responses:
+        '200':
+          description: Supplier tags updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /supplier/tag/all:
+    get:
+      tags:
+        - Suppliers
+      summary: Get all available supplier tags
+      operationId: getAllTags
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of all supplier tags.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupplierTag'
+
+  /supplier/tag:
+    post:
+      tags:
+        - Suppliers
+      summary: Create a new supplier tag
+      operationId: createTag
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Поліграфія"
+      responses:
+        '201':
+          description: Tag created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierTag'
+
+  /supplier/tag/{id}:
+    put:
+      tags:
+        - Suppliers
+      summary: Update a supplier tag
+      operationId: updateTag
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Поліграфічні послуги"
+      responses:
+        '200':
+          description: Tag updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierTag'
+    delete:
+      tags:
+        - Suppliers
+      summary: Delete a supplier tag
+      operationId: deleteTag
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tag deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /company_entity/logo/{id}/logo:
+    post:
+      tags:
+        - Company Entity
+      summary: Upload a logo for any company entity (client, supplier, etc.)
+      operationId: uploadCompanyEntityLogo
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the company_entity.
           required: true
           schema:
             type: integer
@@ -187,8 +758,12 @@ paths:
 
   /company_entity/address:
     post:
-      summary: Create address for client
+      tags:
+        - Company Entity
+      summary: Create an address for a company entity
       operationId: createAddress
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: companyEntityId
@@ -211,8 +786,12 @@ paths:
 
   /company_entity/address/{id}:
     get:
+      tags:
+        - Company Entity
       summary: Get address by ID
       operationId: getAddress
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -226,10 +805,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Address'
-
     put:
+      tags:
+        - Company Entity
       summary: Update address
       operationId: updateAddress
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -249,10 +831,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Address'
-
     delete:
+      tags:
+        - Company Entity
       summary: Delete address
       operationId: deleteAddress
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -269,8 +854,12 @@ paths:
 
   /company_entity/contact_person:
     post:
-      summary: Create contact person for client
+      tags:
+        - Company Entity
+      summary: Create contact person for a company entity
       operationId: createContactPerson
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: companyEntityId
@@ -289,12 +878,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContactPerson'
+                $ref: '#/components/schemas/CreateResponse'
 
   /company_entity/contact_person/{id}:
     get:
+      tags:
+        - Company Entity
       summary: Get contact person by ID
       operationId: getContactPerson
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -308,10 +901,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactPersonDetails'
-
     put:
+      tags:
+        - Company Entity
       summary: Update contact person
       operationId: updateContactPerson
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -331,10 +927,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
-
     delete:
+      tags:
+        - Company Entity
       summary: Delete contact person
       operationId: deleteContactPerson
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -351,8 +950,12 @@ paths:
 
   /company_entity/details:
     post:
-      summary: Create company details for client
+      tags:
+        - Company Entity
+      summary: Create company details for a company entity
       operationId: createCompanyDetails
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: companyEntityId
@@ -375,8 +978,12 @@ paths:
 
   /company_entity/details/{id}:
     get:
+      tags:
+        - Company Entity
       summary: Get company details by ID
       operationId: getCompanyDetails
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -390,10 +997,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CompanyDetails'
-
     put:
+      tags:
+        - Company Entity
       summary: Update company details
       operationId: updateCompanyDetails
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -413,10 +1023,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CompanyDetails'
-
     delete:
+      tags:
+        - Company Entity
       summary: Delete company details
       operationId: deleteCompanyDetails
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -433,8 +1046,12 @@ paths:
 
   /company_entity/comment:
     post:
-      summary: Create comment for client
+      tags:
+        - Company Entity
+      summary: Create a comment for a company entity
       operationId: createCompanyComment
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: companyEntityId
@@ -457,8 +1074,12 @@ paths:
 
   /company_entity/comment/{id}:
     get:
+      tags:
+        - Company Entity
       summary: Get comment by ID
       operationId: getCompanyComment
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -472,10 +1093,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommentDetails'
-
     put:
+      tags:
+        - Company Entity
       summary: Update comment
       operationId: updateCompanyComment
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -495,10 +1119,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Comment'
-
     delete:
+      tags:
+        - Company Entity
       summary: Delete comment
       operationId: deleteCompanyComment
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -515,6 +1142,8 @@ paths:
 
   /image/{id}:
     get:
+      tags:
+        - Images
       summary: Get image by ID
       operationId: getImage
       parameters:
@@ -531,49 +1160,17 @@ paths:
               schema:
                 type: string
                 format: binary
-
-  /auth/login:
-    post:
-      summary: User login
-      operationId: login
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-
-  /auth/logout:
-    post:
-      summary: User logout
-      operationId: logout
-      responses:
-        '204':
-          description: Logout successful
-
-  /auth/user_info:
-    get:
-      summary: Get current user info
-      operationId: userInfo
-      responses:
-        '200':
-          description: User information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserInfo'
+        '404':
+          description: Image not found
 
   /enum/company_entity_types:
     get:
+      tags:
+        - Enums
       summary: Get company entity types enum
       operationId: getCompanyEntityTypes
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of company entity types
@@ -583,12 +1180,16 @@ paths:
                 type: array
                 items:
                   type: string
-                example: ["organiser", "exhibition center", "client"]
+                example: ["organiser", "exhibition center", "client", "supplier"]
 
   /enum/client_types:
     get:
+      tags:
+        - Enums
       summary: Get client types enum
       operationId: getClientTypes
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of client types
@@ -602,8 +1203,12 @@ paths:
 
   /enum/project_categories:
     get:
+      tags:
+        - Enums
       summary: Get project categories enum
       operationId: getProjectCategories
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of project categories
@@ -617,8 +1222,12 @@ paths:
 
   /enum/project_statuses:
     get:
+      tags:
+        - Enums
       summary: Get project statuses enum
       operationId: getProjectStatuses
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of project statuses
@@ -632,8 +1241,12 @@ paths:
 
   /enum/managers:
     get:
+      tags:
+        - Enums
       summary: Get list of managers
       operationId: getManagers
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of managers
@@ -646,7 +1259,7 @@ paths:
 
 components:
   securitySchemes:
-    Authorization:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
@@ -658,46 +1271,43 @@ components:
         add_con_start:
           type: string
           format: date
-          example: "2025-05-11"
+          nullable: true
         con_start:
           type: string
           format: date
-          example: "2025-05-12"
+          nullable: true
         client:
           type: string
           format: date
-          example: "2025-05-13"
+          nullable: true
         event_start:
           type: string
           format: date
-          example: "2025-05-14"
+          nullable: true
         event_end:
           type: string
           format: date
-          example: "2025-05-15"
+          nullable: true
         decon_end:
           type: string
           format: date
-          example: "2025-05-16"
+          nullable: true
         add_decon_end:
           type: string
           format: date
-          example: "2025-05-18"
+          nullable: true
 
     Event:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         short_name:
           type: string
-          example: "Форум стартапів"
         full_name:
           type: string
-          example: "Форум стартапів Довга назва 2025"
-        organizer:
-          type: object
+        organiser:
+          $ref: '#/components/schemas/CompanyEntityBase'
         event_dates:
           $ref: '#/components/schemas/EventDates'
 
@@ -706,281 +1316,309 @@ components:
       properties:
         event:
           $ref: '#/components/schemas/Event'
+        counter:
+          $ref: '#/components/schemas/CategoriesCounter'
         project_types:
           type: object
-          properties:
-            pidvis:
-              type: object
-            standart:
-              type: object
-              properties:
-                counter:
-                  $ref: '#/components/schemas/CategoriesCounter'
-                managers:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      manager:
-                        type: object
-                      counter:
-                        $ref: '#/components/schemas/CategoriesCounter'
-                      projects:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Project'
-            exclusive:
-              type: object
+          additionalProperties:
+            type: object
+            properties:
+              counter:
+                $ref: '#/components/schemas/CategoriesCounter'
+              managers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    manager:
+                      $ref: '#/components/schemas/Manager'
+                    counter:
+                      $ref: '#/components/schemas/CategoriesCounter'
+                    projects:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Project'
 
     Project:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         name:
           type: string
-          example: "Абпланалп"
-        area:
-          type: number
-          example: 24.5
-        image_ids:
-          type: array
-          items:
-            type: integer
-            example: 1
         status:
           type: string
-          example: "Первинні переговори"
-        manager:
-          type: object
+        client:
+          $ref: '#/components/schemas/CompanyEntityBase'
         budget:
           type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/ProjectBudget'
+        image_ids:
+          type: array
+          nullable: true
+          items:
+            type: integer
 
     ProjectBudget:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         amount:
-          type: integer
-          example: 12045100
+          type: number
         currency:
           type: string
-          example: "грн"
         exchange_rate:
-          type: integer
-          example: 100
+          type: number
 
     CategoriesCounter:
       type: object
       properties:
         awaiting_contact:
           type: integer
-          example: 12
         in_progress:
           type: integer
-          example: 8
         finished:
           type: integer
-          example: 0
         canceled:
           type: integer
-          example: 4
 
     ClientList:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         name:
           type: string
-          example: "Компанія ABC"
         client_type:
           type: string
-          example: "public"
         website:
           type: string
-          example: "https://company.com"
+          nullable: true
         manager_user:
+          $ref: '#/components/schemas/Manager'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPersonDetails'
+        last_project:
           type: object
           nullable: true
           properties:
             id:
               type: integer
-              example: 3
             name:
               type: string
-              example: "Іван Петров"
-            avatar_image_file_id:
+        last_event:
+          type: object
+          nullable: true
+          properties:
+            id:
               type: integer
-              nullable: true
-              example: 42
+            name:
+              type: string
+            date_add_con_start:
+              type: string
+              format: date-time
+            date_add_decon_end:
+              type: string
+              format: date-time
+
+    ExhibitionCenterList:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        website:
+          type: string
+          nullable: true
+        manager_user:
+          $ref: '#/components/schemas/Manager'
         contact_persons:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 10
-              name:
-                type: string
-                example: "Марія Коваленко"
-              company_entity_id:
-                type: integer
-                example: 1
-              phones:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    phone:
-                      type: string
-                      example: "+380501234567"
-                    comment:
-                      type: string
-                      example: "Мобільний"
-              emails:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    email:
-                      type: string
-                      example: "maria@company.com"
-                    comment:
-                      type: string
-                      example: "Робочий"
-        project_id:
+            $ref: '#/components/schemas/ContactPersonDetails'
+        last_event:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            date_add_con_start:
+              type: string
+              format: date-time
+            date_add_decon_end:
+              type: string
+              format: date-time
+
+    SupplierList:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        website:
+          type: string
+          nullable: true
+        manager_user:
+          $ref: '#/components/schemas/Manager'
+        tags:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/SupplierTag'
+
+    CompanyEntityBase:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+
+    CompanyEntityDB:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        client_type:
+          type: string
+          nullable: true
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        manager_user_id:
           type: integer
           nullable: true
-          example: 5
-        project_name:
-          type: string
-          nullable: true
-          example: "Проект ABC"
-        last_event_name:
-          type: string
-          nullable: true
-          example: "Форум 2025"
-        date_add_con_start:
-          type: string
-          format: date
-          nullable: true
-          example: "2025-05-11"
-        date_add_decon_end:
-          type: string
-          format: date
-          nullable: true
-          example: "2025-05-18"
-
 
     ClientCreate:
       type: object
       properties:
         clientType:
           type: string
-          example: "public"
         name:
           type: string
-          example: "Нова компанія"
         description:
           type: string
-          example: "Опис компанії"
         phoneNumber:
           type: string
-          example: "+380501234567"
         email:
           type: string
-          example: "info@company.com"
         website:
           type: string
-          example: "https://company.com"
         managerUserId:
           type: integer
-          example: 1
+
+    ExhibitionCenterCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        managerUserId:
+          type: integer
+
+    SupplierCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        managerUserId:
+          type: integer
+        tagIds:
+          type: array
+          items:
+            type: integer
 
     ClientPatch:
       type: object
+      description: Fields to partially update for a client.
       properties:
         clientType:
           type: string
-          example: "public"
         name:
           type: string
-          example: "Оновлена назва"
         description:
           type: string
-          example: "Оновлений опис"
         phoneNumber:
           type: string
-          example: "+380501234567"
         email:
           type: string
-          example: "new@company.com"
         website:
           type: string
-          example: "https://newcompany.com"
         managerUserId:
           type: integer
-          example: 2
 
-    ClientUpdate:
+    SupplierPatch:
       type: object
+      description: Fields to partially update for a supplier.
       properties:
-        client:
-          $ref: '#/components/schemas/ClientPatch'
-        contactPersons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonWithContacts'
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/AddressCreate'
-        companyDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyDetailsCreate'
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        managerUserId:
+          type: integer
 
     ClientDetails:
       type: object
       properties:
         client:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 1
-            type:
-              type: string
-              example: "client"
-            client_type:
-              type: string
-              example: "public"
-            name:
-              type: string
-              example: "Компанія ABC"
-            description:
-              type: string
-              example: "Опис компанії"
-            phone_number:
-              type: string
-              example: "+380501234567"
-            email:
-              type: string
-              example: "info@company.com"
-            website:
-              type: string
-              example: "https://company.com"
-            manager_user_id:
-              type: integer
-              example: 1
+          $ref: '#/components/schemas/CompanyEntityDB'
         contact_persons:
           type: array
           items:
@@ -998,69 +1636,106 @@ components:
           items:
             $ref: '#/components/schemas/CommentDetails'
 
+    ExhibitionCenterDetails:
+      type: object
+      properties:
+        exhibitionCenter:
+          $ref: '#/components/schemas/CompanyEntityDB'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPersonWithContacts'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        company_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyDetails'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDetails'
+
+    SupplierDetails:
+      type: object
+      properties:
+        supplier:
+          $ref: '#/components/schemas/CompanyEntityDB'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPersonWithContacts'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        company_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyDetails'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDetails'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupplierTag'
+
     Address:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         country:
           type: string
-          example: "Україна"
         city:
           type: string
-          example: "Київ"
         address:
           type: string
-          example: "вул. Хрещатик, 1"
-        google_maps_link:
+        Maps_link:
           type: string
-          example: "https://maps.google.com/..."
+          nullable: true
         comment:
           type: string
-          example: "Головний офіс"
+          nullable: true
 
     AddressCreate:
       type: object
       properties:
         country:
           type: string
-          example: "Україна"
         city:
           type: string
-          example: "Київ"
         address:
           type: string
-          example: "вул. Хрещатик, 1"
         googleMapsLink:
           type: string
-          example: "https://maps.google.com/..."
         comment:
           type: string
-          example: "Головний офіс"
 
     ContactPerson:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         name:
           type: string
-          example: "Марія Коваленко"
+        position:
+          type: string
+          nullable: true
         company_entity_id:
           type: integer
-          example: 1
 
     ContactPersonCreate:
       type: object
       properties:
         name:
           type: string
-          example: "Марія Коваленко"
-        companyEntityId:
-          type: integer
-          example: 1
+        position:
+          type: string
         phones:
           type: array
           items:
@@ -1068,10 +1743,8 @@ components:
             properties:
               phone:
                 type: string
-                example: "+380501234567"
               comment:
                 type: string
-                example: "Робочий"
         emails:
           type: array
           items:
@@ -1079,23 +1752,21 @@ components:
             properties:
               email:
                 type: string
-                example: "maria@company.com"
               comment:
                 type: string
-                example: "Основний"
 
     ContactPersonDetails:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         name:
           type: string
-          example: "Марія Коваленко"
-        companyEntityId:
+        position:
+          type: string
+          nullable: true
+        company_entity_id:
           type: integer
-          example: 1
         phones:
           type: array
           items:
@@ -1103,10 +1774,8 @@ components:
             properties:
               phone:
                 type: string
-                example: "+380501234567"
               comment:
                 type: string
-                example: "Робочий"
         emails:
           type: array
           items:
@@ -1114,254 +1783,37 @@ components:
             properties:
               email:
                 type: string
-                example: "maria@company.com"
               comment:
                 type: string
-                example: "Основний"
 
     ContactPersonWithContacts:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Марія Коваленко"
-        company_entity_id:
-          type: integer
-          example: 1
-        phones:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 1
-              phone_number:
-                type: string
-                example: "+380501234567"
-              comment:
-                type: string
-                example: "Робочий"
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 1
-              email:
-                type: string
-                example: "maria@company.com"
-              comment:
-                type: string
-                example: "Основний"
+      allOf:
+        - $ref: '#/components/schemas/ContactPerson'
+        - type: object
+          properties:
+            phones:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  phone:
+                    type: string
+                  comment:
+                    type: string
+            emails:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  comment:
+                    type: string
 
     ContactPersonUpdate:
       type: object
       properties:
-        name:
-          type: string
-          example: "Марія Коваленко"
-        companyEntityId:
-          type: integer
-          example: 1
-        phones:
-          type: array
-          items:
-            type: object
-            properties:
-              phone:
-                type: string
-                example: "+380501234567"
-              comment:
-                type: string
-                example: "Робочий"
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              email:
-                type: string
-                example: "maria@company.com"
-              comment:
-                type: string
-                example: "Основний"
-
-    CompanyDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "ТОВ Компанія ABC"
-        address:
-          type: string
-          example: "01001, м. Київ, вул. Хрещатик, 1"
-        payment_details:
-          type: string
-          example: "ЄДРПОУ: 12345678, р/р: 26001234567890"
-        comment:
-          type: string
-          example: "Основні реквізити"
-
-    CompanyDetailsCreate:
-      type: object
-      properties:
-        name:
-          type: string
-          example: "ТОВ Компанія ABC"
-        address:
-          type: string
-          example: "01001, м. Київ, вул. Хрещатик, 1"
-        paymentDetails:
-          type: string
-          example: "ЄДРПОУ: 12345678, р/р: 26001234567890"
-        comment:
-          type: string
-          example: "Основні реквізити"
-
-    Comment:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        comment:
-          type: string
-          example: "Важливий клієнт"
-        company_entity_id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 1
-
-    CommentCreate:
-      type: object
-      properties:
-        comment:
-          type: string
-          example: "Важливий клієнт"
-
-    CommentDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        comment:
-          type: string
-          example: "Важливий клієнт"
-        user:
-          type: object
-          properties:
-            id:
-              type: integer
-              example: 1
-            name:
-              type: string
-              example: "Іван Петров"
-            avatar_image_file_id:
-              type: integer
-              example: 5
-
-    LoginRequest:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-          example: "user@example.com"
-        password:
-          type: string
-          example: "password123"
-
-    LoginResponse:
-      type: object
-      properties:
-        user_id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Іван Петров"
-        token:
-          type: string
-          example: "abc123-def456-ghi789"
-
-    UserInfo:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Іван Петров"
-
-    Manager:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Іван Петров"
-        avatar_image_file_id:
-          type: integer
-          example: 5
-
-    CreateResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Client company created successfully"
-        clientId:
-          type: integer
-          example: 1
-
-    UpdateResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Client updated successfully"
-        client:
-          type: object
-
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Operation completed successfully"
-
-    UploadImageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Logo uploaded successfully"
-        imageId:
-          type: integer
-          example: 5
-
-security:
-  - Authorization: []
-    
-
-servers:
-  - description: Test server
-    url: https://delicate-minnow-enhanced.ngrok-free.app/
