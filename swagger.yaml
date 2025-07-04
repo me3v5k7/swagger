@@ -722,7 +722,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
-  /company_entity/logo/{id}/logo:
+  /company_entity/{id}/logo:
     post:
       tags:
         - Company Entity
@@ -1817,3 +1817,161 @@ components:
     ContactPersonUpdate:
       type: object
       properties:
+        name:
+          type: string
+        position:
+          type: string
+        companyEntityId:
+          type: integer
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              phone:
+                type: string
+              comment:
+                type: string
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+              comment:
+                type: string
+
+    CompanyDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        payment_details:
+          type: string
+        comment:
+          type: string
+
+    CompanyDetailsCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        paymentDetails:
+          type: string
+        comment:
+          type: string
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        comment:
+          type: string
+        company_entity_id:
+          type: integer
+        user_id:
+          type: integer
+
+    CommentCreate:
+      type: object
+      properties:
+        comment:
+          type: string
+
+    CommentDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        comment:
+          type: string
+        user:
+          $ref: '#/components/schemas/Manager'
+
+    SupplierTag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        token:
+          type: string
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    Manager:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        avatar_image_file_id:
+          type: integer
+          nullable: true
+
+    CreateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        id:
+          type: integer
+
+    UpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        client:
+          type: object
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    UploadImageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        imageId:
+          type: integer
