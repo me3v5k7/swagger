@@ -1180,7 +1180,7 @@ paths:
                 type: array
                 items:
                   type: string
-                example: ["organiser", "exhibition center", "client", "supplier"]
+                example: ["exhibition center", "client", "supplier"]
 
   /enum/client_types:
     get:
