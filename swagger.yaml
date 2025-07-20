@@ -664,7 +664,7 @@ paths:
     post:
       tags:
         - Suppliers
-      summary: Create a new supplier tag
+      summary: Create new supplier tags
       operationId: createTag
       security:
         - BearerAuth: []
@@ -675,9 +675,11 @@ paths:
             schema:
               type: object
               properties:
-                name:
-                  type: string
-                  example: "Поліграфія"
+                tagsToCreate:
+                  type: array
+                  items:
+                    type: string
+                    example: "Поліграфія"
       responses:
         '201':
           description: Tag created successfully
