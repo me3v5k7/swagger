@@ -675,7 +675,7 @@ paths:
             schema:
               type: object
               properties:
-                tagsToCreate:
+                tags:
                   type: array
                   items:
                     type: string
