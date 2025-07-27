@@ -194,7 +194,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ClientList'
-                  number_of_pages:
+                  total_pages:
                     type: integer
 
   /client:
@@ -360,7 +360,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ExhibitionCenterList'
-                  number_of_pages:
+                  total_pages:
                     type: integer
                   
 
@@ -509,7 +509,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/SupplierList'
-                  number_of_pages:
+                  total_pages:
                     type: integer
 
   /supplier:
