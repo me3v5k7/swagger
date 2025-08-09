@@ -23,6 +23,8 @@ tags:
     description: Operations related to suppliers and their tags.
   - name: Company Entity
     description: Shared operations for company entities like addresses, comments, and logos.
+  - name: Projects
+    description: Shared operations for company entities like addresses, comments, and logos.
   - name: Enums
     description: Endpoints to retrieve enumeration values.
   - name: Images
@@ -363,7 +365,6 @@ paths:
                   total_pages:
                     type: integer
                   
-
   /exhibition_center:
     post:
       tags:
@@ -741,6 +742,262 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
+
+  /project/all:
+    get:
+      tags:
+        - Projects
+      summary: Get all projects with filtering and pagination
+      operationId: getAllProjects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: pageSize
+          description: The number of projects to return per page.
+          schema:
+            type: integer
+            maximum: 40
+            default: 8
+        - in: query
+          name: page
+          description: The page number to retrieve.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: name
+          description: Filter by project name (case-insensitive, partial match).
+          schema:
+            type: string
+        - in: query
+          name: managerId
+          description: Filter by the ID of the managing user.
+          schema:
+            type: integer
+        - in: query
+          name: minArea
+          description: Filter for projects with an area greater than or equal to this value.
+          schema:
+            type: number
+        - in: query
+          name: maxArea
+          description: Filter for projects with an area less than or equal to this value.
+          schema:
+            type: number
+        - in: query
+          name: minBudget
+          description: Filter for projects with a total budget greater than or equal to this value.
+          schema:
+            type: number
+        - in: query
+          name: maxBudget
+          description: Filter for projects with a total budget less than or equal to this value.
+          schema:
+            type: number
+        - in: query
+          name: status
+          description: Filter by project status.
+          schema:
+            type: string
+        - in: query
+          name: clientId
+          description: Filter by the ID of the client company entity.
+          schema:
+            type: integer
+        - in: query
+          name: eventId
+          description: Filter by the ID of the event.
+          schema:
+            type: integer
+        - in: query
+          name: eventDateFrom
+          description: Filter for projects whose event start date is on or after this date.
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: eventDateTo
+          description: Filter for projects whose event end date is on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: A paginated list of projects.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectList'
+                  total_pages:
+                    type: integer
+        '400':
+          description: Invalid input, e.g., pageSize is too large.
+        '500':
+          description: Internal Server Error.
+
+  /project:
+    post:
+      tags:
+        - Projects
+      summary: Create a new project
+      operationId: createProject
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Project object that needs to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Project created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project' # Assuming the response is the created project object
+        '400':
+          description: Invalid input, missing required fields.
+        '500':
+          description: Internal Server Error.
+
+  /project/{id}:
+    get:
+      tags:
+        - Projects
+      summary: Get project by ID
+      description: Retrieve detailed information about a specific project, including associated client, users, budgets, suppliers, comments, and images.
+      operationId: getProject
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the project to retrieve.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetails'
+        '404':
+          description: Project not found.
+        '500':
+          description: Internal Server Error.
+    patch:
+      tags:
+        - Projects
+      summary: Partially update a project
+      description: Update one or more fields of an existing project.
+      operationId: patchProject
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the project to update.
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: An object containing the fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPatch'
+      responses:
+        '200':
+          description: Project updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: No valid fields provided for update.
+        '404':
+          description: Project not found.
+        '500':
+          description: Internal Server Error.
+    delete:
+      tags:
+        - Projects
+      summary: Delete project
+      description: Deletes a project and all its associated data (budgets, comments, supplier links, etc.).
+      operationId: deleteProject
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the project to delete.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Project not found.
+        '500':
+          description: Internal Server Error.
+
+  /project/{id}/image:
+    post:
+      tags:
+        - Projects
+      summary: Upload an image for a project
+      operationId: uploadProjectImage
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the project to associate the image with.
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadImageResponse'
+        '400':
+          description: No file uploaded.
+        '404':
+          description: Project not found.
+        '500':
+          description: Error uploading image.
+
 
   /company_entity/{id}/logo:
     post:
@@ -1445,6 +1702,244 @@ components:
             date_add_decon_end:
               type: string
               format: date-time
+
+    ProjectList:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 8
+        name:
+          type: string
+          example: "Some project 2"
+        manager_user:
+          $ref: '#/components/schemas/Manager'
+        area:
+          type: number
+          example: 120.5
+        total_budget:
+          type: number
+          example: 25000
+        status:
+          type: string
+          example: "design approved"
+        category:
+          type: string
+          example: "exclusive"
+        client:
+          $ref: '#/components/schemas/CompanyEntityBase'
+        event_name:
+          type: string
+          example: "Форум Формуів"
+        addcondate:
+          type: string
+          format: date-time
+          example: "2025-04-29T00:00:00.000Z"
+        adddecondate:
+          type: string
+          format: date-time
+          example: "2025-05-09T00:00:00.000Z"
+
+    ProjectCreate:
+      type: object
+      description: The request body for creating a new project.
+      required:
+        - name
+        - category
+        - client_company_entity_id
+        - manager_user_id
+      properties:
+        name:
+          type: string
+          description: The name of the project.
+          example: "New Stand for Tech Expo"
+        area:
+          type: number
+          description: The area of the project in square meters.
+          nullable: true
+          example: 50.5
+        category:
+          type: string
+          description: The category of the project.
+          example: "exclusive"
+        status:
+          type: string
+          description: The initial status of the project.
+          nullable: true
+          example: "waiting for contact"
+        event_id:
+          type: integer
+          description: The ID of the event this project is associated with.
+          nullable: true
+          example: 12
+        client_company_entity_id:
+          type: integer
+          description: The ID of the client's company entity.
+          example: 45
+        manager_user_id:
+          type: integer
+          description: The ID of the user managing this project.
+          example: 3
+        userIds:
+          type: array
+          description: An array of additional user IDs to associate with the project.
+          items:
+            type: integer
+          example: [4, 5]
+
+    ProjectPatch:
+      type: object
+      description: The request body for partially updating a project. All fields are optional.
+      properties:
+        name:
+          type: string
+          description: The new name of the project.
+          example: "Updated Stand for Tech Expo"
+        area:
+          type: number
+          description: The new area of the project in square meters.
+          example: 60.0
+        category:
+          type: string
+          description: The new category of the project.
+          example: "standart"
+        status:
+          type: string
+          description: The new status of the project.
+          example: "design approved"
+        event_id:
+          type: integer
+          description: The new event ID for the project.
+          example: 13
+        client_company_entity_id:
+          type: integer
+          description: The new client company entity ID for the project.
+          example: 46
+        manager_user_id:
+          type: integer
+          description: The new managing user ID for the project.
+          example: 4
+
+    ProjectDetails:
+      type: object
+      description: Contains all detailed information about a single project.
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Gross exhibition stand"
+        area:
+          type: number
+          nullable: true
+          example: 0
+        category:
+          type: string
+          example: "exclusive"
+        status:
+          type: string
+          example: "waiting for contact"
+        event_id:
+          type: integer
+          example: 1
+        client_company_entity_id:
+          type: integer
+          example: 3
+        manager_user_id:
+          type: integer
+          example: 1
+        event_name:
+          type: string
+          example: "Форум Стартапів"
+        manager_name:
+          type: string
+          example: "Василь Гайкін"
+        client:
+          $ref: '#/components/schemas/CompanyEntityDB'
+        users:
+          type: array
+          description: List of users associated with the project.
+          items:
+            $ref: '#/components/schemas/Manager'
+        budgets:
+          type: array
+          description: A list of budgets associated with the project in different currencies.
+          items:
+            $ref: '#/components/schemas/ProjectBudget'
+        suppliers:
+          type: array
+          description: A list of suppliers involved in the project and their associated costs.
+          items:
+            $ref: '#/components/schemas/ProjectSupplier'
+        comments:
+          type: array
+          description: Comments related to the project.
+          items:
+            $ref: '#/components/schemas/CommentDetails'
+        images:
+          type: array
+          description: A list of images associated with the project.
+          items:
+            $ref: '#/components/schemas/ProjectImage'
+            
+    ProjectImage:
+      type: object
+      description: Represents an image associated with a project.
+      properties:
+        id:
+          type: integer
+          description: The unique ID of the project-image link.
+          example: 50
+        project_id:
+          type: integer
+          description: The ID of the project.
+          example: 1
+        image_file_id:
+          type: integer
+          description: The ID of the actual image file in the image store.
+          example: 101
+
+    ProjectSupplier:
+      type: object
+      description: Represents a supplier's involvement in a project, including costs.
+      properties:
+        id:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          nullable: true
+          example: 500.75
+        currency:
+          type: string
+          nullable: true
+          example: "eur"
+        exchange_rate:
+          type: number
+          nullable: true
+          example: 45.50
+        comment:
+          type: string
+          nullable: true
+          example: "For printing services"
+        supplier:
+          $ref: '#/components/schemas/SupplierSummary'
+
+    SupplierSummary:
+      type: object
+      description: A brief summary of a supplier company.
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: "Frahkfurt Exhibition Center"
+        logo_image_file_id:
+          type: integer
+          nullable: true
+          example: 205
 
     ExhibitionCenterList:
       type: object
