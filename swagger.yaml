@@ -1771,11 +1771,11 @@ components:
           type: integer
           description: The ID of the event this project is associated with.
           nullable: true
-          example: 12
+          example: 1
         client_company_entity_id:
           type: integer
           description: The ID of the client's company entity.
-          example: 45
+          example: 1
         manager_user_id:
           type: integer
           description: The ID of the user managing this project.
@@ -1785,7 +1785,7 @@ components:
           description: An array of additional user IDs to associate with the project.
           items:
             type: integer
-          example: [4, 5]
+          example: [1, 2]
 
     ProjectPatch:
       type: object
@@ -1810,15 +1810,15 @@ components:
         event_id:
           type: integer
           description: The new event ID for the project.
-          example: 13
+          example: 1
         client_company_entity_id:
           type: integer
           description: The new client company entity ID for the project.
-          example: 46
+          example: 1
         manager_user_id:
           type: integer
           description: The new managing user ID for the project.
-          example: 4
+          example: 41
 
     ProjectDetails:
       type: object
