@@ -969,7 +969,7 @@ paths:
           name: projectId
           required: true
           schema:
-            type: id
+            type: integer
       requestBody:
         required: true
         content:
@@ -1036,7 +1036,7 @@ paths:
           name: projectId
           required: true
           schema:
-            type: id
+            type: integer
       requestBody:
         required: true
         content:
