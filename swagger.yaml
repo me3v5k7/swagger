@@ -962,6 +962,7 @@ paths:
     post:
       tags:
         - Projects
+      operationId: postProjectBudget
       security:
         - BearerAuth: []
       parameters:
@@ -981,6 +982,7 @@ paths:
     get:
       tags:
         - Projects
+      operationId: getProjectBudget
       security:
         - BearerAuth: []
       parameters:
@@ -992,6 +994,7 @@ paths:
     patch:
       tags:
         - Projects
+      operationId: patchProjectBudget
       security:
         - BearerAuth: []
       parameters:
@@ -1010,6 +1013,7 @@ paths:
     delete:
       tags:
         - Projects
+      operationId: deleteProjectBudget
       security:
         - BearerAuth: []
       parameters:
@@ -1023,6 +1027,7 @@ paths:
     post:
       tags:
         - Projects
+      operationId: postProjectSupplier
       security:
         - BearerAuth: []
       parameters:
@@ -1042,6 +1047,7 @@ paths:
     get:
       tags:
         - Projects
+      operationId: getProjectSupplier
       security:
         - BearerAuth: []
       parameters:
@@ -1053,6 +1059,7 @@ paths:
     patch:
       tags:
         - Projects
+      operationId: patchProjectSupplier
       security:
         - BearerAuth: []
       parameters:
@@ -1071,6 +1078,7 @@ paths:
     delete:
       tags:
         - Projects
+      operationId: deleteProjectSupplier
       security:
         - BearerAuth: []
       parameters:
@@ -1084,6 +1092,7 @@ paths:
     post:
       tags:
         - Projects
+      operationId: postProjectComment
       security:
         - BearerAuth: []
       parameters:
@@ -1110,6 +1119,7 @@ paths:
     get:
       tags:
         - Projects
+      operationId: getProjectComment
       security:
         - BearerAuth: []
       parameters:
@@ -1129,6 +1139,7 @@ paths:
       tags:
         - Projects
       summary: Update comment
+      operationId: putProjectComment
       security:
         - BearerAuth: []
       parameters:
@@ -1153,6 +1164,7 @@ paths:
     delete:
       tags:
         - Projects
+      operationId: deleteProjectComment
       security:
         - BearerAuth: []
       parameters:
