@@ -1180,55 +1180,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
-  
-  /project/supplier/{id}:
-    get:
-      tags:
-        - Projects
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: ProjectId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PojectSupplier'
-    patch:
-      tags:
-        - Projects
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: ProjectId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePojectSupplier'
-    
-    delete:
-      tags:
-        - Projects
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: ProjectId
-          required: true
-          schema:
-            type: integer
-
 
   /project/{id}/image:
     post:
