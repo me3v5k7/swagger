@@ -957,6 +957,279 @@ paths:
           description: Project not found.
         '500':
           description: Internal Server Error.
+  
+  /project/budget/:
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectBudget'
+  
+  /project/budget/{id}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectBudget'
+    patch:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectBudget'
+
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          
+  /project/supplier:
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectSupplier'
+  
+  /project/supplier/{id}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PojectSupplier'
+    patch:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePojectSupplier'
+    
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+    
+  /project/comment:
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  /project/comment/{id}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetails'
+    put:
+      tags:
+        - Projects
+      summary: Update comment
+      operationId: updateCompanyComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '200':
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  
+  /project/supplier/{id}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PojectSupplier'
+    patch:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePojectSupplier'
+    
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: ProjectId
+          required: true
+          schema:
+            type: integer
+
 
   /project/{id}/image:
     post:
@@ -1649,6 +1922,29 @@ components:
           type: string
         exchange_rate:
           type: number
+    
+    CreateProjectBudget:
+      type: object
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+        exchange_rate:
+          type: number
+
+    CreateProjectSupplier:
+      type: object
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+        exchange_rate:
+          type: number
+        comment:
+          type: string
+    
 
     CategoriesCounter:
       type: object
