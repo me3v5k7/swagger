@@ -1052,7 +1052,7 @@ paths:
         - BearerAuth: []
       parameters:
         - in: query
-          name: ProjectId
+          name: projectId
           required: true
           schema:
             type: integer
