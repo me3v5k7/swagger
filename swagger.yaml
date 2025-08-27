@@ -1141,7 +1141,6 @@ paths:
       tags:
         - Projects
       summary: Update comment
-      operationId: updateCompanyComment
       security:
         - BearerAuth: []
       parameters:
