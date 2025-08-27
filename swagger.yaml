@@ -1866,7 +1866,7 @@ components:
           type: number
         currency:
           type: string
-        exchange_rate:
+        exchangeRate:
           type: number
         comment:
           type: string
