@@ -989,12 +989,6 @@ paths:
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProjectBudget'
     patch:
       tags:
         - Projects
@@ -1056,12 +1050,6 @@ paths:
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PojectSupplier'
     patch:
       tags:
         - Projects
