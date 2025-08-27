@@ -979,18 +979,6 @@ paths:
               $ref: '#/components/schemas/CreateProjectBudget'
   
   /project/budget/{id}:
-    get:
-      tags:
-        - Projects
-      operationId: getProjectBudget
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
     patch:
       tags:
         - Projects
@@ -1044,18 +1032,6 @@ paths:
               $ref: '#/components/schemas/CreateProjectSupplier'
   
   /project/supplier/{id}:
-    get:
-      tags:
-        - Projects
-      operationId: getProjectSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: projectId
-          required: true
-          schema:
-            type: integer
     patch:
       tags:
         - Projects
