@@ -15,6 +15,10 @@ tags:
     description: User authentication operations.
   - name: Page
     description: Endpoints for aggregated page data.
+  - name: Event Themes
+    description: Operations related to event themes.
+  - name: Events
+    description: Operations related to specific events.
   - name: Clients
     description: Operations related to clients.
   - name: Exhibition Centers
@@ -115,6 +119,198 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/EventMainPageInfo'
+  
+  /event_theme:
+    post:
+      tags:
+        - Event Themes
+      summary: Create a new event theme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventThemeInput'
+      responses:
+        '201':
+          description: Event theme created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventThemeBase'
+        '400':
+          description: Bad Request - Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Event Themes
+      summary: Get a paginated list of all event themes
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by theme name (case-insensitive, partial match)
+        - name: managerId
+          in: query
+          schema:
+            type: integer
+          description: Filter by the ID of the manager of the organising company
+        - name: organiserId
+          in: query
+          schema:
+            type: integer
+          description: Filter by the ID of the organising company
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 8
+            maximum: 40
+          description: Number of items per page
+      responses:
+        '200':
+          description: A list of event themes with nested event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventThemeListResponse'
+        '500':
+          description: Internal Server Error
+
+  /event_theme/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Event Themes
+      summary: Get a single event theme by ID
+      responses:
+        '200':
+          description: Detailed event theme object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventThemeDetailed'
+        '404':
+          description: Event theme not found
+    put:
+      tags:
+        - Event Themes
+      summary: Replace an event theme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventThemeInput'
+      responses:
+        '200':
+          description: Event theme updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventThemeBase'
+        '404':
+          description: Event theme not found
+    delete:
+      tags:
+        - Event Themes
+      summary: Delete an event theme
+      responses:
+        '204':
+          description: Event theme deleted successfully
+        '404':
+          description: Event theme not found
+        '409':
+          description: Conflict - Theme is associated with events
+
+  /event:
+    post:
+      tags:
+        - Events
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventBase'
+        '400':
+          description: Bad Request - Missing required fields
+        '404':
+          description: Associated Event Theme not found
+
+  /event/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Events
+      summary: Get a single event by ID
+      responses:
+        '200':
+          description: Detailed event object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetailedResponse'
+        '404':
+          description: Event not found
+    put:
+      tags:
+        - Events
+      summary: Replace an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventBase'
+        '404':
+          description: Event or associated Event Theme not found
+    delete:
+      tags:
+        - Events
+      summary: Delete an event
+      responses:
+        '204':
+          description: Event deleted successfully
+        '404':
+          description: Event not found
+        '409':
+          description: Conflict - Event is associated with projects
 
   /client/all:
     get:
@@ -364,7 +560,7 @@ paths:
                       $ref: '#/components/schemas/ExhibitionCenterList'
                   total_pages:
                     type: integer
-                  
+                    
   /exhibition_center:
     post:
       tags:
@@ -812,6 +1008,11 @@ paths:
           schema:
             type: integer
         - in: query
+          name: supplierId
+          description: Filter by the ID of an associated supplier.
+          schema:
+            type: integer
+        - in: query
           name: eventDateFrom
           description: Filter for projects whose event start date is on or after this date.
           schema:
@@ -1010,7 +1211,7 @@ paths:
           required: true
           schema:
             type: integer
-          
+        
   /project/supplier:
     post:
       tags:
@@ -1741,6 +1942,234 @@ components:
       bearerFormat: JWT
 
   schemas:
+    # Reusable Schemas
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Resource not found."
+          
+    # Event and Event Theme Schemas
+    Organiser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        name:
+          type: string
+          example: "PremierExpo"
+
+    ExhibitionCenter:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        type:
+          type: string
+          example: "exhibition center"
+        name:
+          type: string
+          example: "IEC"
+        description:
+          type: string
+          example: "International Exhibition Centre"
+        phone_number:
+          type: string
+          example: "+380442011161"
+        email:
+          type: string
+          format: email
+          example: "iec@iec-expo.com.ua"
+        website:
+          type: string
+          format: uri
+          example: "https://www.iec-expo.com.ua/"
+        logo_image_file_id:
+          type: integer
+          nullable: true
+        address:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+
+    EventThemeBase:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        organiser_company_entity_id:
+          type: integer
+    
+    EventThemeInput:
+      type: object
+      required:
+        - name
+        - organiserCompanyEntityId
+      properties:
+        name:
+          type: string
+          example: "InterCharm"
+        organiserCompanyEntityId:
+          type: integer
+          description: The ID of the organising company.
+          example: 3
+          
+    EventThemeDetailed:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "InterCharm"
+        organiser:
+          $ref: '#/components/schemas/Organiser'
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 15
+              short_name:
+                type: string
+                example: "InterCharm 2025"
+              full_name:
+                type: string
+                example: "International Exhibition of Perfumery and Cosmetics InterCharm 2025"
+              event_dates:
+                $ref: '#/components/schemas/EventDates'
+              exhibiton_centers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExhibitionCenter'
+
+    EventThemeListResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventThemeDetailed'
+        total_pages:
+          type: integer
+          example: 5
+
+    EventBase:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        short_name:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+        date_add_con_start:
+          type: string
+          format: date
+          nullable: true
+        date_con_start:
+          type: string
+          format: date
+          nullable: true
+        date_client:
+          type: string
+          format: date
+          nullable: true
+        date_event_start:
+          type: string
+          format: date
+        date_event_end:
+          type: string
+          format: date
+        date_decon_end:
+          type: string
+          format: date
+          nullable: true
+        date_add_decon_end:
+          type: string
+          format: date
+          nullable: true
+        event_theme_id:
+          type: integer
+        organiser_company_entity_id:
+          type: integer
+
+    EventInput:
+      type: object
+      required:
+        - shortName
+        - dateEventStart
+        - dateEventEnd
+        - eventThemeId
+      properties:
+        shortName:
+          type: string
+          example: "InterCharm 2025"
+        fullName:
+          type: string
+          example: "International Exhibition of Perfumery and Cosmetics InterCharm 2025"
+        dateAddConStart:
+          type: string
+          format: date
+        dateConStart:
+          type: string
+          format: date
+        dateClient:
+          type: string
+          format: date
+        dateEventStart:
+          type: string
+          format: date
+        dateEventEnd:
+          type: string
+          format: date
+        dateDeconEnd:
+          type: string
+          format: date
+        dateAddDeconEnd:
+          type: string
+          format: date
+        eventThemeId:
+          type: integer
+          example: 1
+
+    EventDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        short_name:
+          type: string
+        full_name:
+          type: string
+        event_dates:
+          $ref: '#/components/schemas/EventDates'
+        event_theme:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        organiser:
+          $ref: '#/components/schemas/Organiser'
+        exhibition_centers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExhibitionCenter'
+
+    # General Schemas from new file
     EventDates:
       type: object
       properties:
@@ -1873,7 +2302,6 @@ components:
         supplierId:
           type: integer
     
-
     CategoriesCounter:
       type: object
       properties:
@@ -2434,8 +2862,9 @@ components:
           type: string
         address:
           type: string
-        Maps_link:
+        google_maps_link:
           type: string
+          format: uri
           nullable: true
         comment:
           type: string
@@ -2714,3 +3143,4 @@ components:
           type: string
         imageId:
           type: integer
+
