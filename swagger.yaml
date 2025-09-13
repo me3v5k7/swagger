@@ -144,6 +144,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  
+  /event_theme/all:
     get:
       tags:
         - Event Themes
