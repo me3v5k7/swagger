@@ -2494,19 +2494,13 @@ components:
         status:
           type: string
           example: "waiting for contact"
-        event_id:
-          type: integer
-          example: 1
-        client_company_entity_id:
-          type: integer
-          example: 3
         manager:
           $ref: '#/components/schemas/Manager'
         event_name:
           type: string
           example: "Форум Стартапів"
         client:
-          $ref: '#/components/schemas/CompanyEntityDB'
+          $ref: '#/components/schemas/ProjectClient'
         users:
           type: array
           description: List of users associated with the project.
@@ -3142,3 +3136,93 @@ components:
         imageId:
           type: integer
 
+    ProjectClient:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the company entity.
+          example: 42
+        name:
+          type: string
+          description: The legal name of the company.
+          example: "Innovate Inc."
+        created_at:
+          type: string
+          format: date-time
+          description: The timestamp when the company entity was created.
+          example: "2025-09-18T19:30:00Z"
+        
+        contact_persons:
+          type: array
+          description: A list of contact persons associated with the company.
+          items:
+            $ref: '#/components/schemas/ContactPerson' 
+          nullable: true
+
+        company_details:
+          type: array
+          description: A list of legal or administrative details for the company.
+          items:
+            $ref: '#/components/schemas/CompanyDetail' 
+          nullable: true
+      required:
+        - id
+        - name
+    ProjectContactPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        position:
+          type: string
+        company_entity_id:
+          type: integer
+        phone_numbers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneNumber'
+          nullable: true
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Email'
+          nullable: true
+    PhoneNumber:
+      type: object
+      properties:
+        id:
+          type: integer
+        phone_number:
+          type: string
+        comment:
+          type: string
+        contact_person_id:
+          type: integer
+          
+    Email:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        comment:
+          type: string
+        contact_person_id:
+          type: integer
+
+    CompanyDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        registration_number:
+          type: string
+        vat_id:
+          type: string
+        company_entity_id:
+          type: integer
