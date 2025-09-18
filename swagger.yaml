@@ -2500,15 +2500,11 @@ components:
         client_company_entity_id:
           type: integer
           example: 3
-        manager_user_id:
-          type: integer
-          example: 1
+        manager:
+          $ref: '#/components/schemas/Manager'
         event_name:
           type: string
           example: "Форум Стартапів"
-        manager_name:
-          type: string
-          example: "Василь Гайкін"
         client:
           $ref: '#/components/schemas/CompanyEntityDB'
         users:
