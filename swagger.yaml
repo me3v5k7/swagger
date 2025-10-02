@@ -263,6 +263,37 @@ paths:
         '404':
           description: Associated Event Theme not found
 
+  /event/all:
+    get:
+      tags:
+        - Events
+      summary: Get a paginated list of all event themes
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: eventThemeId
+          in: query
+          schema:
+            type: integer
+        - name: organiserCompanyEntityId
+          in: query
+          schema:
+            type: integer
+
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 8
+            maximum: 40
+
   /event/{id}:
     parameters:
       - name: id
