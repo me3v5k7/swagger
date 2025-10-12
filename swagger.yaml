@@ -1409,14 +1409,34 @@ paths:
       requestBody:
         required: true
         content:
-          image/jpeg:
-            schema:
-              type: string
-              format: binary
-          image/png:
-            schema:
-              type: string
-              format: binary
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - images
+                properties:
+                  images:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: string
+                      example: "/9j/4cG8RXhpZgAASUkqAAgAAAAMAAABBAABAAAAwA8AAAEBBAA..."
+      responses:
+        '201':
+          description: Images uploaded and linked successfully. Returns an array of IDs for the created links.
+          content:
+            application/json:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Successfully uploaded 2 images."
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ImageLink'
+
       responses:
         '200':
           description: Image uploaded successfully
