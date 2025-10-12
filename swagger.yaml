@@ -1409,19 +1409,18 @@ paths:
       requestBody:
         required: true
         content:
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - images
-                properties:
-                  images:
-                    type: array
-                    minItems: 1
-                    items:
-                      type: string
-                      example: "/9j/4cG8RXhpZgAASUkqAAgAAAAMAAABBAABAAAAwA8AAAEBBAA..."
+          application/json:
+            schema:
+              type: object
+              required:
+                - images
+              properties:
+                images:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    example: "/9j/4cG8RXhpZgAASUkqAAgAAAAMAAABBAABAAAAwA8AAAEBBAA..."
       responses:
         '201':
           content:
