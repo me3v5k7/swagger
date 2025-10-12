@@ -1424,7 +1424,6 @@ paths:
                       example: "/9j/4cG8RXhpZgAASUkqAAgAAAAMAAABBAABAAAAwA8AAAEBBAA..."
       responses:
         '201':
-          description: Images uploaded and linked successfully. Returns an array of IDs for the created links.
           content:
             application/json:
               type: object
@@ -1435,21 +1434,13 @@ paths:
                 data:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ImageLink'
-
-      responses:
-        '200':
-          description: Image uploaded successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UploadImageResponse'
-        '400':
-          description: No file uploaded.
-        '404':
-          description: Project not found.
-        '500':
-          description: Error uploading image.
+                    type: object
+                    properties:
+                      projectImageId:
+                        type: integer
+                      imageId:
+                        type: integer
+                        example: 1
 
 
   /company_entity/{id}/logo:
