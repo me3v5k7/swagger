@@ -2186,6 +2186,11 @@ components:
         eventThemeId:
           type: integer
           example: 1
+        exhibitionCenterIds:
+          type: array
+          items:
+            type: integer
+          example: [1, 2, 3]
 
     EventDetailedResponse:
       type: object
