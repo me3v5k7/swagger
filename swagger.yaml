@@ -2192,7 +2192,7 @@ components:
             type: integer
           example: [1, 2, 3]
 
-    EventDetailedResponse:
+    EventDetailedResponse: 
       type: object
       properties:
         id:
