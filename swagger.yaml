@@ -1,46 +1,21 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  description: This is the API documentation for the Standpoint application.
-  version: "1.0.0"
-  title: Standpoint API
-  contact:
-    email: you@your-company.com
-
+  title: Standpoint Backend API
+  version: 1.0.0
+  description: API documentation for the Standpoint architecture and project management backend system.
 servers:
-  - description: Test server
-    url: https://delicate-minnow-enhanced.ngrok-free.app/
-
-tags:
-  - name: Authentication
-    description: User authentication operations.
-  - name: Page
-    description: Endpoints for aggregated page data.
-  - name: Event Themes
-    description: Operations related to event themes.
-  - name: Events
-    description: Operations related to specific events.
-  - name: Clients
-    description: Operations related to clients.
-  - name: Exhibition Centers
-    description: Operations related to exhibition centers.
-  - name: Suppliers
-    description: Operations related to suppliers and their tags.
-  - name: Company Entity
-    description: Shared operations for company entities like addresses, comments, and logos.
-  - name: Projects
-    description: Shared operations for company entities like addresses, comments, and logos.
-  - name: Enums
-    description: Endpoints to retrieve enumeration values.
-  - name: Images
-    description: Operations for retrieving images.
+  - url: http://localhost:4000
+    description: Local development server
 
 paths:
+  # ==========================================
+  # AUTHENTICATION
+  # ==========================================
   /auth/login:
     post:
+      summary: User Login
       tags:
         - Authentication
-      summary: User login
-      operationId: login
       requestBody:
         required: true
         content:
@@ -56,3053 +31,1426 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid credentials
+        '400':
+          description: Validation error
 
   /auth/logout:
     post:
+      summary: User Logout
       tags:
         - Authentication
-      summary: User logout
-      operationId: logout
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '204':
-          description: Logout successful
-
-  /auth/user_info:
-    get:
-      tags:
-        - Authentication
-      summary: Get current user info
-      operationId: userInfo
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: User information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserInfo'
+          description: Successfully logged out
         '401':
           description: Unauthorized
-
-  /page/main:
-    get:
-      tags:
-        - Page
-      summary: Provides information for the main page within a date range
-      operationId: getPageMain
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: dateFrom
-          required: true
-          schema:
-            type: string
-            format: date
-            example: "2025-01-01"
-        - in: query
-          name: dateTo
-          required: true
-          schema:
-            type: string
-            format: date
-            example: "2025-12-31"
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EventMainPageInfo'
-  
-  /event_theme:
-    post:
-      tags:
-        - Event Themes
-      summary: Create a new event theme
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventThemeInput'
-      responses:
-        '201':
-          description: Event theme created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventThemeBase'
-        '400':
-          description: Bad Request - Missing required fields
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  
-  /event_theme/all:
-    get:
-      tags:
-        - Event Themes
-      summary: Get a paginated list of all event themes
-      parameters:
-        - name: name
-          in: query
-          schema:
-            type: string
-          description: Filter by theme name (case-insensitive, partial match)
-        - name: managerId
-          in: query
-          schema:
-            type: integer
-          description: Filter by the ID of the manager of the organising company
-        - name: organiserId
-          in: query
-          schema:
-            type: integer
-          description: Filter by the ID of the organising company
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-          description: Page number
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-            default: 8
-            maximum: 40
-          description: Number of items per page
-      responses:
-        '200':
-          description: A list of event themes with nested event details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventThemeListResponse'
         '500':
           description: Internal Server Error
 
-  /event_theme/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
+  /auth/user_info:
     get:
+      summary: Get current user info
       tags:
-        - Event Themes
-      summary: Get a single event theme by ID
+        - Authentication
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Detailed event theme object
+          description: Current authenticated user details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventThemeDetailed'
-        '404':
-          description: Event theme not found
-    put:
-      tags:
-        - Event Themes
-      summary: Replace an event theme
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventThemeInput'
-      responses:
-        '200':
-          description: Event theme updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventThemeBase'
-        '404':
-          description: Event theme not found
-    delete:
-      tags:
-        - Event Themes
-      summary: Delete an event theme
-      responses:
-        '204':
-          description: Event theme deleted successfully
-        '404':
-          description: Event theme not found
-        '409':
-          description: Conflict - Theme is associated with events
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
 
-  /event:
-    post:
-      tags:
-        - Events
-      summary: Create a new event
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventInput'
-      responses:
-        '201':
-          description: Event created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventBase'
-        '400':
-          description: Bad Request - Missing required fields
-        '404':
-          description: Associated Event Theme not found
-
-  /event/all:
+  # ==========================================
+  # PAGE
+  # ==========================================
+  /page/main:
     get:
+      summary: Fetch main dashboard page data filtered by date overlap
       tags:
-        - Events
-      summary: Get a paginated list of all event themes
+        - Page
+      security:
+        - bearerAuth: []
       parameters:
-        - name: name
+        - name: dateFrom
           in: query
+          required: true
           schema:
             type: string
-        - name: eventThemeId
+            format: date-time
+        - name: dateTo
           in: query
-          schema:
-            type: integer
-        - name: organiserCompanyEntityId
-          in: query
-          schema:
-            type: integer
-
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-            default: 8
-            maximum: 40
-
-  /event/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      tags:
-        - Events
-      summary: Get a single event by ID
-      responses:
-        '200':
-          description: Detailed event object
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventDetailedResponse'
-        '404':
-          description: Event not found
-    put:
-      tags:
-        - Events
-      summary: Replace an event
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventInput'
-      responses:
-        '200':
-          description: Event updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventBase'
-        '404':
-          description: Event or associated Event Theme not found
-    delete:
-      tags:
-        - Events
-      summary: Delete an event
-      responses:
-        '204':
-          description: Event deleted successfully
-        '404':
-          description: Event not found
-        '409':
-          description: Conflict - Event is associated with projects
-
-  /client/all:
-    get:
-      tags:
-        - Clients
-      summary: Get all clients with filtering and pagination
-      operationId: getAllClients
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: pageSize
-          schema:
-            type: integer
-            maximum: 40
-            default: 8
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: name
-          schema:
-            type: string
-        - in: query
-          name: clientType
-          schema:
-            type: string
-        - in: query
-          name: managerId
-          schema:
-            type: integer
-        - in: query
-          name: lastProjectId
-          schema:
-            type: integer
-        - in: query
-          name: lastProjectName
-          schema:
-            type: string
-        - in: query
-          name: lastEventName
-          schema:
-            type: string
-        - in: query
-          name: lastEventId
-          schema:
-            type: integer
-        - in: query
-          name: lastEventDateFrom
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: lastEventDateTo
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: anyEventId
-          schema:
-            type: integer
-        - in: query
-          name: search
-          description: General search term across multiple fields.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: A list of clients.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  list:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ClientList'
-                  total_pages:
-                    type: integer
-
-  /client:
-    post:
-      tags:
-        - Clients
-      summary: Create a new client
-      operationId: createClient
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientCreate'
-      responses:
-        '201':
-          description: Client created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  clientId:
-                    type: integer
-
-  /client/{id}:
-    get:
-      tags:
-        - Clients
-      summary: Get client by ID
-      operationId: getClient
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
           required: true
           schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClientDetails'
-    patch:
-      tags:
-        - Clients
-      summary: Partially update client
-      operationId: patchClient
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientPatch'
-      responses:
-        '200':
-          description: Client updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateResponse'
-    delete:
-      tags:
-        - Clients
-      summary: Delete client
-      operationId: deleteClient
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Client deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /exhibition_center/all:
-    get:
-      tags:
-        - Exhibition Centers
-      summary: Get all exhibition centers with filtering and pagination
-      operationId: getAllExhibitionCenters
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: pageSize
-          schema:
-            type: integer
-            maximum: 40
-            default: 8
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: name
-          schema:
             type: string
-        - in: query
-          name: managerId
-          schema:
-            type: integer
-        - in: query
-          name: lastEventName
-          schema:
-            type: string
-        - in: query
-          name: lastEventId
-          schema:
-            type: integer
-        - in: query
-          name: lastEventDateFrom
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: lastEventDateTo
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: anyEventId
-          schema:
-            type: integer
-        - in: query
-          name: search
-          description: General search term across multiple fields.
-          schema:
-            type: string
+            format: date-time
       responses:
         '200':
-          description: A list of exhibition centers.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  list:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ExhibitionCenterList'
-                  total_pages:
-                    type: integer
-                    
-  /exhibition_center:
-    post:
-      tags:
-        - Exhibition Centers
-      summary: Create a new exhibition center
-      operationId: createExhibitionCenter
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExhibitionCenterCreate'
-      responses:
-        '201':
-          description: Exhibition Center created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  exhibitionCenterId:
-                    type: integer
-
-  /exhibition_center/{id}:
-    get:
-      tags:
-        - Exhibition Centers
-      summary: Get exhibition center by ID
-      operationId: getExhibitionCenter
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExhibitionCenterDetails'
-    patch:
-      tags:
-        - Exhibition Centers
-      summary: Partially update exhibition center
-      operationId: patchExhibitionCenter
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExhibitionCenterCreate'
-      responses:
-        '200':
-          description: Exhibition Center updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateResponse'
-    delete:
-      tags:
-        - Exhibition Centers
-      summary: Delete exhibition center
-      operationId: deleteExhibitionCenter
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Exhibition Center deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /supplier/all:
-    get:
-      tags:
-        - Suppliers
-      summary: Get all suppliers with filtering and pagination
-      operationId: getAllSuppliers
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: pageSize
-          schema:
-            type: integer
-            default: 8
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: name
-          schema:
-            type: string
-        - in: query
-          name: managerId
-          schema:
-            type: integer
-        - in: query
-          name: tags
-          description: Comma-separated list of tag IDs to filter by.
-          schema:
-            type: string
-            example: "1,5,12"
-        - in: query
-          name: search
-          description: General search term across multiple fields.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: A list of suppliers.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  list:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/SupplierList'
-                  total_pages:
-                    type: integer
-
-  /supplier:
-    post:
-      tags:
-        - Suppliers
-      summary: Create a new supplier
-      operationId: createSupplier
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SupplierCreate'
-      responses:
-        '201':
-          description: Supplier created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  supplierId:
-                    type: integer
-
-  /supplier/{id}:
-    get:
-      tags:
-        - Suppliers
-      summary: Get supplier by ID
-      operationId: getSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SupplierDetails'
-    patch:
-      tags:
-        - Suppliers
-      summary: Partially update supplier
-      operationId: patchSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SupplierPatch'
-      responses:
-        '200':
-          description: Supplier updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateResponse'
-    delete:
-      tags:
-        - Suppliers
-      summary: Delete supplier
-      operationId: deleteSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Supplier deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /supplier/{id}/tags:
-    put:
-      tags:
-        - Suppliers
-      summary: Update tags for a supplier
-      description: Replaces all existing tags for a supplier with the new set of tags.
-      operationId: updateSupplierTags
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                tagIds:
-                  type: array
-                  items:
-                    type: integer
-                  example: [1, 5, 12]
-      responses:
-        '200':
-          description: Supplier tags updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /supplier/tag/all:
-    get:
-      tags:
-        - Suppliers
-      summary: Get all available supplier tags
-      operationId: getAllTags
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: A list of all supplier tags.
+          description: Array of transformed exhibition and project dashboard data
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupplierTag'
+                  $ref: '#/components/schemas/TransformedExhibition'
 
-  /supplier/tag:
-    post:
+  # ==========================================
+  # PROJECTS
+  # ==========================================
+  /project/enum:
+    get:
+      summary: List all projects with simple name and id mapping
       tags:
-        - Suppliers
-      summary: Create new supplier tags
-      operationId: createTag
+        - Project
       security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                tags:
-                  type: array
-                  items:
-                    type: string
-                    example: "Поліграфія"
+        - bearerAuth: []
       responses:
-        '201':
-          description: Tag created successfully
+        '200':
+          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupplierTag'
+                  $ref: '#/components/schemas/EnumItem'
 
-  /supplier/tag/{id}:
-    put:
-      tags:
-        - Suppliers
-      summary: Update a supplier tag
-      operationId: updateTag
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: "Поліграфічні послуги"
-      responses:
-        '200':
-          description: Tag updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SupplierTag'
-    delete:
-      tags:
-        - Suppliers
-      summary: Delete a supplier tag
-      operationId: deleteTag
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Tag deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /project/all:
-    get:
-      tags:
-        - Projects
-      summary: Get all projects with filtering and pagination
-      operationId: getAllProjects
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: pageSize
-          description: The number of projects to return per page.
-          schema:
-            type: integer
-            maximum: 40
-            default: 8
-        - in: query
-          name: page
-          description: The page number to retrieve.
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: name
-          description: Filter by project name (case-insensitive, partial match).
-          schema:
-            type: string
-        - in: query
-          name: managerId
-          description: Filter by the ID of the managing user.
-          schema:
-            type: integer
-        - in: query
-          name: minArea
-          description: Filter for projects with an area greater than or equal to this value.
-          schema:
-            type: number
-        - in: query
-          name: maxArea
-          description: Filter for projects with an area less than or equal to this value.
-          schema:
-            type: number
-        - in: query
-          name: minBudget
-          description: Filter for projects with a total budget greater than or equal to this value.
-          schema:
-            type: number
-        - in: query
-          name: maxBudget
-          description: Filter for projects with a total budget less than or equal to this value.
-          schema:
-            type: number
-        - in: query
-          name: status
-          description: Filter by project status.
-          schema:
-            type: string
-        - in: query
-          name: clientId
-          description: Filter by the ID of the client company entity.
-          schema:
-            type: integer
-        - in: query
-          name: eventId
-          description: Filter by the ID of the event.
-          schema:
-            type: integer
-        - in: query
-          name: supplierId
-          description: Filter by the ID of an associated supplier.
-          schema:
-            type: integer
-        - in: query
-          name: eventDateFrom
-          description: Filter for projects whose event start date is on or after this date.
-          schema:
-            type: string
-            format: date
-        - in: query
-          name: eventDateTo
-          description: Filter for projects whose event end date is on or before this date.
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: A paginated list of projects.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  list:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ProjectList'
-                  total_pages:
-                    type: integer
-        '400':
-          description: Invalid input, e.g., pageSize is too large.
-        '500':
-          description: Internal Server Error.
-
-  /project:
+  /project/:
     post:
-      tags:
-        - Projects
       summary: Create a new project
-      operationId: createProject
+      tags:
+        - Project
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       requestBody:
-        description: Project object that needs to be added.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProjectCreate'
+              $ref: '#/components/schemas/CreateProjectRequest'
       responses:
         '201':
-          description: Project created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project' # Assuming the response is the created project object
-        '400':
-          description: Invalid input, missing required fields.
-        '500':
-          description: Internal Server Error.
-
-  /project/{id}:
-    get:
-      tags:
-        - Projects
-      summary: Get project by ID
-      description: Retrieve detailed information about a specific project, including associated client, users, budgets, suppliers, comments, and images.
-      operationId: getProject
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          description: The ID of the project to retrieve.
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectDetails'
-        '404':
-          description: Project not found.
-        '500':
-          description: Internal Server Error.
-    patch:
-      tags:
-        - Projects
-      summary: Partially update a project
-      description: Update one or more fields of an existing project.
-      operationId: patchProject
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          description: The ID of the project to update.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        description: An object containing the fields to update.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProjectPatch'
-      responses:
-        '200':
-          description: Project updated successfully.
+          description: Project created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
-        '400':
-          description: No valid fields provided for update.
-        '404':
-          description: Project not found.
-        '500':
-          description: Internal Server Error.
-    delete:
+
+  /project/all:
+    get:
+      summary: List and search all projects with pagination
       tags:
-        - Projects
-      summary: Delete project
-      description: Deletes a project and all its associated data (budgets, comments, supplier links, etc.).
-      operationId: deleteProject
+        - Project
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          description: The ID of the project to delete.
-          required: true
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: manager
+          in: query
           schema:
             type: integer
+        - name: minArea
+          in: query
+          schema:
+            type: string
+        - name: maxArea
+          in: query
+          schema:
+            type: string
+        - name: minBudget
+          in: query
+          schema:
+            type: string
+        - name: maxBudget
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProjectCategory'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProjectStatus'
+        - name: client
+          in: query
+          schema:
+            type: integer
+        - name: exhibition
+          in: query
+          schema:
+            type: integer
+        - name: supplier
+          in: query
+          schema:
+            type: integer
+        - name: exhibitionDateFrom
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: exhibitionDateTo
+          in: query
+          schema:
+            type: string
+            format: date-time
       responses:
         '200':
-          description: Project deleted successfully.
+          description: List of paginated projects
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  totalPages:
+                    type: integer
+
+  /project/{id}:
+    get:
+      summary: Get details of a single project
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Project information populated with deep associations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         '404':
-          description: Project not found.
-        '500':
-          description: Internal Server Error.
-  
+          description: Project not found
+    patch:
+      summary: Update metadata details on an existing project
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProjectRequest'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+    delete:
+      summary: Soft-delete a project
+      tags:
+        - Project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Project marked as deleted
+        '404':
+          description: Project not found
+
+  # Project Budget Child Routing
   /project/budget/:
     post:
+      summary: Create a target allocation record in project budget ledger
       tags:
-        - Projects
-      operationId: postProjectBudget
+        - Project Budget
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: query
-          name: projectId
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/projectQuery'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProjectBudget'
-  
-  /project/budget/{id}:
-    patch:
-      tags:
-        - Projects
-      operationId: patchProjectBudget
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProjectBudget'
-
-    delete:
-      tags:
-        - Projects
-      operationId: deleteProjectBudget
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        
-  /project/supplier:
-    post:
-      tags:
-        - Projects
-      operationId: postProjectSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: projectId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProjectSupplier'
-  
-  /project/supplier/{id}:
-    patch:
-      tags:
-        - Projects
-      operationId: patchProjectSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: ProjectId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePojectSupplier'
-    
-    delete:
-      tags:
-        - Projects
-      operationId: deleteProjectSupplier
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: ProjectId
-          required: true
-          schema:
-            type: integer
-    
-  /project/comment:
-    post:
-      tags:
-        - Projects
-      operationId: postProjectComment
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: projectId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommentCreate'
+              $ref: '#/components/schemas/BudgetLedgerPayload'
       responses:
         '201':
-          description: Comment created successfully
+          description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Comment'
-
-  /project/comment/{id}:
-    get:
+                $ref: '#/components/schemas/ProjectBudget'
+  /project/budget/{id}:
+    patch:
+      summary: Update an amount record in budget allocation ledger
       tags:
-        - Projects
-      operationId: getProjectComment
+        - Project Budget
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommentDetails'
-    put:
-      tags:
-        - Projects
-      summary: Update comment
-      operationId: putProjectComment
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CommentCreate'
+              $ref: '#/components/schemas/BudgetLedgerPayload'
       responses:
         '200':
-          description: Comment updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
+          description: Success
     delete:
+      summary: Hard delete a project budget tracking line
       tags:
-        - Projects
-      operationId: deleteProjectComment
+        - Project Budget
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Removed
+
+  # Project Comments Child Routing
+  /project/comment/:
+    post:
+      summary: Add structural feedback comments against project tracker
+      tags:
+        - Project Comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/projectQuery'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentPayload'
+      responses:
+        '201':
+          description: Saved
+  /project/comment/{id}:
+    put:
+      summary: Rewrite existing project text commentary
+      tags:
+        - Project Comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentPayload'
       responses:
         '200':
-          description: Comment deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+          description: Updated
+    delete:
+      summary: Soft-delete comment from client visibility
+      tags:
+        - Project Comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Removed
 
+  # Project Suppliers Tracking Child Routing
+  /project/supplier/:
+    post:
+      summary: Bind external processing supplier contract amounts to Project
+      tags:
+        - Project Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/projectQuery'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectSupplierPayload'
+      responses:
+        '201':
+          description: Associated
+  /project/supplier/{id}:
+    patch:
+      summary: Mutate pricing on active supplier links inside project
+      tags:
+        - Project Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectSupplierPayload'
+      responses:
+        '200':
+          description: Flushed
+    delete:
+      summary: Hard remove a linked supplier pipeline from the structural project layout
+      tags:
+        - Project Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Decoupled
+
+  # Project Images Upload Multi
   /project/{id}/image:
     post:
+      summary: Upload array of images for production reference to S3/R2 storage tier
       tags:
-        - Projects
-      summary: Upload an image for a project
-      operationId: uploadProjectImage
+        - Project Image
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          description: The ID of the project to associate the image with.
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       requestBody:
-        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
-              required:
-                - images
               properties:
                 images:
                   type: array
-                  minItems: 1
+                  maxItems: 10
                   items:
                     type: string
-                    example: "/9j/4cG8RXhpZgAASUkqAAgAAAAMAAABBAABAAAAwA8AAAEBBAA..."
+                    format: binary
       responses:
         '201':
-          content:
-            application/json:
-              type: object
-              properties:
-                message:
-                  type: string
-                  example: "Successfully uploaded 2 images."
-                data:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      projectImageId:
-                        type: integer
-                      imageId:
-                        type: integer
-                        example: 1
-
-
-  /company_entity/{id}/logo:
-    post:
-      tags:
-        - Company Entity
-      summary: Upload a logo for any company entity (client, supplier, etc.)
-      operationId: uploadCompanyEntityLogo
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          description: The ID of the company_entity.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          image/jpeg:
-            schema:
-              type: string
-              format: binary
-          image/png:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '200':
-          description: Logo uploaded successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UploadImageResponse'
-
-  /company_entity/address:
-    post:
-      tags:
-        - Company Entity
-      summary: Create an address for a company entity
-      operationId: createAddress
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: query
-          name: companyEntityId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddressCreate'
-      responses:
-        '201':
-          description: Address created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Address'
-
-  /company_entity/address/{id}:
-    get:
-      tags:
-        - Company Entity
-      summary: Get address by ID
-      operationId: getAddress
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Address'
-    put:
-      tags:
-        - Company Entity
-      summary: Update address
-      operationId: updateAddress
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddressCreate'
-      responses:
-        '200':
-          description: Address updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Address'
+          description: Upload context complete
+  /project/image/{id}:
     delete:
+      summary: Unlink object from tracking map and wipe physical content off R2 cluster storage file index
       tags:
-        - Company Entity
-      summary: Delete address
-      operationId: deleteAddress
+        - Project Image
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Purged
+
+  # ==========================================
+  # CLIENTS
+  # ==========================================
+  /client/enum:
+    get:
+      summary: List all client companies (Simple Enum)
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Address deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
-
-  /company_entity/contact_person:
-    post:
+          description: Array of identifier data pairs
+  /client/all:
+    get:
+      summary: Paginated extraction of corporate profile system entities filtered to Client type structure mappings
       tags:
-        - Company Entity
-      summary: Create contact person for a company entity
-      operationId: createContactPerson
+        - Client
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: query
-          name: companyEntityId
-          required: true
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: manager
+          in: query
           schema:
             type: integer
+        - name: anyExhibition
+          in: query
+          schema:
+            type: integer
+        - name: clientType
+          in: query
+          schema:
+            $ref: '#/components/schemas/ClientType'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /client/:
+    post:
+      summary: Provision structural profile wrapper context detailing structural business entity metadata profiles
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactPersonCreate'
+              $ref: '#/components/schemas/CreateClientPayload'
       responses:
         '201':
-          description: Contact person created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateResponse'
-
-  /company_entity/contact_person/{id}:
+          description: Provisioned
+  /client/{id}:
     get:
+      summary: Deep populated lookups against operational profiles
       tags:
-        - Company Entity
-      summary: Get contact person by ID
-      operationId: getContactPerson
+        - Client
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContactPersonDetails'
-    put:
+          description: Success
+    patch:
+      summary: Update general client company demographics details fields
       tags:
-        - Company Entity
-      summary: Update contact person
-      operationId: updateContactPerson
+        - Client
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactPersonUpdate'
+              $ref: '#/components/schemas/PatchClientPayload'
       responses:
         '200':
-          description: Contact person updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+          description: Mutated
     delete:
+      summary: System execution context for triggering client visibility toggles (Soft-Delete)
       tags:
-        - Company Entity
-      summary: Delete contact person
-      operationId: deleteContactPerson
+        - Client
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Suspended
+
+  # ==========================================
+  # EXHIBITION CENTERS
+  # ==========================================
+  /exhibition_center/enum:
+    get:
+      summary: Simplified index context list endpoints returning Exhibition Center identification fields values mapping
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Complete index data extract arrays
+  /exhibition_center/all:
+    get:
+      summary: Multi-criteria list operations for filtering matching structural infrastructure target nodes
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: manager
+          in: query
           schema:
             type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
       responses:
         '200':
-          description: Contact person deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+          description: Collection match output contexts data pipelines
+  /exhibition_center/:
+    post:
+      summary: Core provisioning mappings for structural exhibition real estate node registry
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExhibitionCenterPayload'
+      responses:
+        '201':
+          description: Profile injected to ecosystem layers
+  /exhibition_center/{id}:
+    get:
+      summary: Inspect venue node context
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Complete domain parameters maps returns
+    patch:
+      summary: Structural field mutation against site data metrics details indexes
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchExhibitionCenterPayload'
+      responses:
+        '200':
+          description: Profile records adjusted
+    delete:
+      summary: Flag infrastructure entry point as soft disabled within downstream tracking metrics view layers
+      tags:
+        - Exhibition Center
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Flagged out
 
+  # ==========================================
+  # SUPPLIERS
+  # ==========================================
+  /supplier/enum:
+    get:
+      summary: Enum mappings across active provider units entries listing basic profiles indexes records mappings
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Complete active subset mapping lists
+  /supplier/all:
+    get:
+      summary: Extract operational vendor configurations bounded dynamically with assigned index reference attributes tags
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: manager
+          in: query
+          schema:
+            type: integer
+        - name: tags
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search output response arrays
+  /supplier/:
+    post:
+      summary: Provision metadata settings context mapping out external supplier entries
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSupplierPayload'
+      responses:
+        '201':
+          description: Persistence layout structured successfully
+  /supplier/{id}:
+    get:
+      summary: View granular profile details mappings assigned over targeted supplier identities entries
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Comprehensive details object responses map data
+    patch:
+      summary: Adjust tracking properties inside vendor management module databases listings maps definitions
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSupplierPayload'
+      responses:
+        '200':
+          description: Profiles flushed successfully
+    delete:
+      summary: soft deletion wrapper around vendor structures entries layout trackers maps definitions lists
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: State value context mutated out
+  /supplier/{id}/tags:
+    put:
+      summary: Overwrite and synchronize relation links connecting metadata classification tags mapping structures over specialized providers
+      tags:
+        - Supplier
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSupplierTagsPayload'
+      responses:
+        '200':
+          description: Re-indexed tag configuration state values returned outputs
+
+  # Supplier Tag Metadata Management Sub-Routers
+  /supplier/tag/all:
+    get:
+      summary: List taxonomical metadata classifications applied inside supplier grouping strategies operations
+      tags:
+        - Supplier Tags
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sorted categorization labels dataset mappings array list returns
+  /supplier/tag:
+    post:
+      summary: Bulk input mapping pipeline optimizing new grouping categorization tag keys processing workflows
+      tags:
+        - Supplier Tags
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTagsPayload'
+      responses:
+        '200':
+          description: Batch execution context state reports output payload containing records structures logs tracing status maps summaries
+  /supplier/tag/{id}:
+    put:
+      summary: System rename updates for metadata tags labels
+      tags:
+        - Supplier Tags
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTagLabelPayload'
+      responses:
+        '200':
+          description: Label modified inside global classifications indices maps layers
+        '409':
+          description: Unique key structural verification constraint conflict errors mapping outputs
+    delete:
+      summary: Execute label cleaning protocols removing targeted tax values strings trackers
+      tags:
+        - Supplier Tags
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: force
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Hard wiped off context tree structure indices completely maps trackers definitions
+        '409':
+          description: Blocking integrity validation exception checks triggered (Active supplier attachments mapping structures found)
+
+  # ==========================================
+  # COMPANY ENTITY DETAILS
+  # ==========================================
   /company_entity/details:
     post:
+      summary: Bind structural operational data parameters context lines against an active corporate structure component wrapper records
       tags:
-        - Company Entity
-      summary: Create company details for a company entity
-      operationId: createCompanyDetails
+        - Company Entity Details
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: query
-          name: companyEntityId
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/companyEntityQuery'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompanyDetailsCreate'
+              $ref: '#/components/schemas/CompanyDetailsPayload'
       responses:
         '201':
-          description: Company details created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompanyDetails'
-
+          description: Appended
   /company_entity/details/{id}:
     get:
+      summary: Read legal accounting metadata context strings assigned inside specific identifier structures
       tags:
-        - Company Entity
-      summary: Get company details by ID
-      operationId: getCompanyDetails
+        - Company Entity Details
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompanyDetails'
+          description: Processing successful returns schema metrics values context blocks elements map mappings
     put:
+      summary: Update existing internal billing profiles properties fields mapping settings arrays
       tags:
-        - Company Entity
-      summary: Update company details
-      operationId: updateCompanyDetails
+        - Company Entity Details
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompanyDetailsCreate'
+              $ref: '#/components/schemas/CompanyDetailsPayload'
       responses:
         '200':
-          description: Company details updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompanyDetails'
+          description: Persistence components adjusted successfully contexts layout configurations
     delete:
+      summary: Hard delete a company details profile
       tags:
-        - Company Entity
-      summary: Delete company details
-      operationId: deleteCompanyDetails
+        - Company Entity Details
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       responses:
-        '200':
-          description: Company details deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+        '204':
+          description: Flushed completely out of enterprise tracking storage engines metrics layers mappings
 
-  /company_entity/comment:
+  # ==========================================
+  # COMPANY ENTITY ADDRESS
+  # ==========================================
+  /company_entity/address/:
     post:
+      summary: Map localization metadata coordinates attributes mappings tracking locations points arrays definitions
       tags:
-        - Company Entity
-      summary: Create a comment for a company entity
-      operationId: createCompanyComment
+        - Company Entity Address
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: query
-          name: companyEntityId
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/companyEntityQuery'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CommentCreate'
+              $ref: '#/components/schemas/AddressPayload'
       responses:
         '201':
-          description: Comment created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-
-  /company_entity/comment/{id}:
+          description: Context bound
+  /company_entity/address/{id}:
     get:
+      summary: Inspect geospatial tracking reference nodes values attributes elements
       tags:
-        - Company Entity
-      summary: Get comment by ID
-      operationId: getCompanyComment
+        - Company Entity Address
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommentDetails'
+          description: Operational tracking parameters context elements output values data schema maps summaries structures
     put:
+      summary: Re-index tracking criteria specifications mapping properties attributes over targets points models lists
       tags:
-        - Company Entity
-      summary: Update comment
-      operationId: updateCompanyComment
+        - Company Entity Address
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CommentCreate'
+              $ref: '#/components/schemas/AddressPayload'
       responses:
         '200':
-          description: Comment updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
+          description: Location metadata elements refreshed outputs inside localized maps definitions entries
     delete:
+      summary: Eliminate geocoding location parameters context nodes entries completely mappings
       tags:
-        - Company Entity
-      summary: Delete comment
-      operationId: deleteCompanyComment
+        - Company Entity Address
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/id'
       responses:
-        '200':
-          description: Comment deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+        '204':
+          description: Removed execution context data components tracks fields definitions metrics layouts
 
-  /image/{id}:
-    get:
+  # ==========================================
+  # COMPANY ENTITY CONTACT PERSON
+  # ==========================================
+  /company_entity/contact_person/:
+    post:
+      summary: Link a new contact person to a business company profile account module layout index
       tags:
-        - Images
-      summary: Get image by ID
-      operationId: getImage
+        - Company Entity Contact Person
+      security:
+        - bearerAuth: []
       parameters:
-        - in: path
-          name: id
-          required: true
+        - $ref: '#/components/parameters/companyEntityQuery'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPersonPayload'
+      responses:
+        '201':
+          description: Injected pipeline record context elements outputs tracking details maps data lists structures
+  /company_entity/contact_person/{id}:
+    get:
+      summary: Fetch structural configuration maps tracking individual human point context details values arrays definitions profiles
+      tags:
+        - Company Entity Contact Person
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Target elements returns success maps contexts arrays
+    put:
+      summary: Structural update mapping corrections applied down inside client management point contexts definitions models
+      tags:
+        - Company Entity Contact Person
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPersonPayload'
+      responses:
+        '200':
+          description: Flushed parameters profiles state context map details adjusted outputs fields values
+    delete:
+      summary: Execute cleanup operations removing reference accounts completely mappings contexts profiles data lists trackers
+      tags:
+        - Company Entity Contact Person
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Deleted record maps files entries contexts workflows structures layers listings tracking modules
+
+  # ==========================================
+  # COMPANY ENTITY LOGO
+  # ==========================================
+  /company_entity/{id}/logo/:
+    post:
+      summary: Stream binary media image structures updating tracking configurations branding contexts variables parameters
+      tags:
+        - Company Entity Logo
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Brand dynamic asset uploaded matching entries profiles storage routes contexts maps definitions configurations
+
+  # ==========================================
+  # EXHIBITIONS
+  # ==========================================
+  /exhibition/enum:
+    get:
+      summary: Extraction mapping parameters output array context summaries matching running exhibitions profiles details list indexes mappings
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Enum structures tracking vectors items maps definitions returned outputs responses data matrices layouts
+  /exhibition/all:
+    get:
+      summary: Search layout structures filtering active global operational trade schedules frameworks timelines variables trackers maps definitions
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: exhibitionTheme
+          in: query
+          schema:
+            type: integer
+        - name: organiser
+          in: query
+          schema:
+            type: integer
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Paginated response array records outputs
+  /exhibition/:
+    post:
+      summary: Inject schedule architecture tracking models outlining new trade exhibit context definitions
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionPayload'
+      responses:
+        '201':
+          description: Instantiated setup variables
+  /exhibition/{id}:
+    get:
+      summary: Detailed mapping inspect against specific target venue timelines setup schedules configurations mappings arrays data loops
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Success
+    put:
+      summary: Total transactional replacement update processing targeting historical structures context tracking indices elements values
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionPayload'
+      responses:
+        '201':
+          description: System overwritten contexts flushed adjustments
+    delete:
+      summary: Flag entry out of active downstream scheduling routines layers pipelines calculations maps tracking indices dashboards lists
+      tags:
+        - Exhibition
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Deactivation state applied
+
+  # ==========================================
+  # EXHIBITION THEMES
+  # ==========================================
+  /exhibition_theme/enum:
+    get:
+      summary: List all exhibition themes (Simple Enum)
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+  /exhibition_theme/:
+    post:
+      summary: Create a new exhibition theme classification template
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionThemePayload'
+      responses:
+        '201':
+          description: Created
+  /exhibition_theme/all:
+    get:
+      summary: Retrieve all exhibition theme context models configurations filtered under search params layout parameters metrics trees
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/rawPageSize'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/orderDir'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: manager
+          in: query
+          schema:
+            type: integer
+        - name: organiser
+          in: query
           schema:
             type: integer
       responses:
         '200':
-          description: Image data
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        '404':
-          description: Image not found
+          description: Success
+  /exhibition_theme/{id}:
+    get:
+      summary: Inspect schema parameters maps describing targeting theme definitions variables logs traces summaries objects
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Success returns schema mapping outputs
+    put:
+      summary: Overwrite data structures properties mapped down onto specialized active context indices lists nodes setup templates metrics elements
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExhibitionThemePayload'
+      responses:
+        '201':
+          description: Completely replaced mapping details output contexts elements configurations metrics matrices layout definitions
+    delete:
+      summary: Soft-delete an exhibition theme template configuration path layout element module index tree node tracker mapping maps
+      tags:
+        - Exhibition Theme
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Successfully tagged down structural reference frameworks visibility configurations variables fields states profiles lists
 
+  # ==========================================
+  # ENUMS METADATA LOOKUPS
+  # ==========================================
   /enum/company_entity_types:
     get:
+      summary: Enumerate valid data structure states for classification settings (CompanyEntityType)
       tags:
-        - Enums
-      summary: Get company entity types enum
-      operationId: getCompanyEntityTypes
+        - Enums Lookups
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: List of company entity types
+          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: string
-                example: ["exhibition center", "client", "supplier"]
 
   /enum/client_types:
     get:
+      summary: Enumerate public vs private operational metrics types values assigned profiles categories structures (ClientType)
       tags:
-        - Enums
-      summary: Get client types enum
-      operationId: getClientTypes
+        - Enums Lookups
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: List of client types
+          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: string
-                example: ["public", "private"]
 
   /enum/project_categories:
     get:
+      summary: Enumerate design architectural build complexities targets parameters fields (ProjectCategory)
       tags:
-        - Enums
-      summary: Get project categories enum
-      operationId: getProjectCategories
+        - Enums Lookups
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: List of project categories
+          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: string
-                example: ["exclusive", "standart", "pidvis"]
 
   /enum/project_statuses:
     get:
+      summary: Enumerate pipeline production life cycle phases elements metrics sequences indices paths (ProjectStatus)
       tags:
-        - Enums
-      summary: Get project statuses enum
-      operationId: getProjectStatuses
+        - Enums Lookups
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: List of project statuses
+          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: string
-                example: ["waiting for contact", "initial negotiations", "technical requirements formed", "design approved", "estimate approved", "contract signed", "blueprints ready", "materials ordered", "materials received", "installation in progress", "stand delivered", "payments closed", "cancelled", "not participating"]
 
   /enum/managers:
     get:
+      summary: List account references identities records to map management contexts variables (Users index simple profiles)
       tags:
-        - Enums
-      summary: Get list of managers
-      operationId: getManagers
+        - Enums Lookups
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: List of managers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Manager'
+          description: Success
 
+# ==========================================
+# COMPONENTS AND SCHEMAS DEFINITIONS SPEC
+# ==========================================
 components:
   securitySchemes:
-    BearerAuth:
+    bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    rawPageSize:
+      name: rawPageSize
+      in: query
+      schema:
+        type: integer
+        maximum: 40
+        default: 8
+    orderBy:
+      name: orderBy
+      in: query
+      schema:
+        type: string
+        enum: [createdAt, updatedAt, name, area, exhibitionDate]
+        default: createdAt
+    orderDir:
+      name: orderDir
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+    projectQuery:
+      name: project
+      in: query
+      required: true
+      schema:
+        type: integer
+    companyEntityQuery:
+      name: companyEntity
+      in: query
+      required: true
+      schema:
+        type: integer
 
   schemas:
-    # Reusable Schemas
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-          example: "Resource not found."
-          
-    # Event and Event Theme Schemas
-    Organiser:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 3
-        name:
-          type: string
-          example: "PremierExpo"
+    # Enums Definition Maps
+    ProjectStatus:
+      type: string
+      enum:
+        - WAITING_FOR_CONTACT
+        - INITIAL_NEGOTIATIONS
+        - TECHNICAL_REQUIREMENTS_FORMED
+        - DESIGN_APPROVED
+        - ESTIMATE_APPROVED
+        - CONTRACT_SIGNED
+        - BLUEPRINTS_READY
+        - MATERIALS_ORDERED
+        - MATERIALS_RECEIVED
+        - INSTALLATION_IN_PROGRESS
+        - STAND_DELIVERED
+        - PAYMENTS_CLOSED
+        - CANCELLED
+        - NOT_PARTICIPATING
 
-    ExhibitionCenter:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        type:
-          type: string
-          example: "exhibition center"
-        name:
-          type: string
-          example: "IEC"
-        description:
-          type: string
-          example: "International Exhibition Centre"
-        phone_number:
-          type: string
-          example: "+380442011161"
-        email:
-          type: string
-          format: email
-          example: "iec@iec-expo.com.ua"
-        website:
-          type: string
-          format: uri
-          example: "https://www.iec-expo.com.ua/"
-        logo_image_file_id:
-          type: integer
-          nullable: true
-        address:
-          type: array
-          items:
-            $ref: '#/components/schemas/Address'
+    ProjectCategory:
+      type: string
+      enum:
+        - EXCLUSIVE
+        - STANDART
+        - PIDVIS
 
-    EventThemeBase:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-        organiser_company_entity_id:
-          type: integer
-    
-    EventThemeInput:
-      type: object
-      required:
-        - name
-        - organiserCompanyEntityId
-      properties:
-        name:
-          type: string
-          example: "InterCharm"
-        organiserCompanyEntityId:
-          type: integer
-          description: The ID of the organising company.
-          example: 3
-          
-    EventThemeDetailed:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "InterCharm"
-        organiser:
-          $ref: '#/components/schemas/Organiser'
-        events:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-                example: 15
-              short_name:
-                type: string
-                example: "InterCharm 2025"
-              full_name:
-                type: string
-                example: "International Exhibition of Perfumery and Cosmetics InterCharm 2025"
-              event_dates:
-                $ref: '#/components/schemas/EventDates'
-              exhibiton_centers:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExhibitionCenter'
+    CompanyEntityType:
+      type: string
+      enum:
+        - SUPPLIER
+        - EXHIBITION_CENTER
+        - CLIENT
 
-    EventThemeListResponse:
-      type: object
-      properties:
-        list:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventThemeDetailed'
-        total_pages:
-          type: integer
-          example: 5
+    ClientType:
+      type: string
+      enum:
+        - PUBLIC
+        - PRIVATE
 
-    EventBase:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        short_name:
-          type: string
-        full_name:
-          type: string
-          nullable: true
-        date_add_con_start:
-          type: string
-          format: date
-          nullable: true
-        date_con_start:
-          type: string
-          format: date
-          nullable: true
-        date_client:
-          type: string
-          format: date
-          nullable: true
-        date_event_start:
-          type: string
-          format: date
-        date_event_end:
-          type: string
-          format: date
-        date_decon_end:
-          type: string
-          format: date
-          nullable: true
-        date_add_decon_end:
-          type: string
-          format: date
-          nullable: true
-        event_theme_id:
-          type: integer
-        organiser_company_entity_id:
-          type: integer
-
-    EventInput:
-      type: object
-      required:
-        - shortName
-        - dateEventStart
-        - dateEventEnd
-        - eventThemeId
-      properties:
-        shortName:
-          type: string
-          example: "InterCharm 2025"
-        fullName:
-          type: string
-          example: "International Exhibition of Perfumery and Cosmetics InterCharm 2025"
-        dateAddConStart:
-          type: string
-          format: date
-        dateConStart:
-          type: string
-          format: date
-        dateClient:
-          type: string
-          format: date
-        dateEventStart:
-          type: string
-          format: date
-        dateEventEnd:
-          type: string
-          format: date
-        dateDeconEnd:
-          type: string
-          format: date
-        dateAddDeconEnd:
-          type: string
-          format: date
-        eventThemeId:
-          type: integer
-          example: 1
-        exhibitionCenterIds:
-          type: array
-          items:
-            type: integer
-          example: [1, 2, 3]
-
-    EventDetailedResponse: 
-      type: object
-      properties:
-        id:
-          type: integer
-        short_name:
-          type: string
-        full_name:
-          type: string
-        event_dates:
-          $ref: '#/components/schemas/EventDates'
-        event_theme:
-          type: object
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-        organiser:
-          $ref: '#/components/schemas/Organiser'
-        exhibition_centers:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExhibitionCenter'
-
-    # General Schemas from new file
-    EventDates:
-      type: object
-      properties:
-        add_con_start:
-          type: string
-          format: date
-          nullable: true
-        con_start:
-          type: string
-          format: date
-          nullable: true
-        client:
-          type: string
-          format: date
-          nullable: true
-        event_start:
-          type: string
-          format: date
-          nullable: true
-        event_end:
-          type: string
-          format: date
-          nullable: true
-        decon_end:
-          type: string
-          format: date
-          nullable: true
-        add_decon_end:
-          type: string
-          format: date
-          nullable: true
-
-    Event:
-      type: object
-      properties:
-        id:
-          type: integer
-        short_name:
-          type: string
-        full_name:
-          type: string
-        organiser:
-          $ref: '#/components/schemas/CompanyEntityBase'
-        event_dates:
-          $ref: '#/components/schemas/EventDates'
-
-    EventMainPageInfo:
-      type: object
-      properties:
-        event:
-          $ref: '#/components/schemas/Event'
-        counter:
-          $ref: '#/components/schemas/CategoriesCounter'
-        project_types:
-          type: object
-          additionalProperties:
-            type: object
-            properties:
-              counter:
-                $ref: '#/components/schemas/CategoriesCounter'
-              managers:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    manager:
-                      $ref: '#/components/schemas/Manager'
-                    counter:
-                      $ref: '#/components/schemas/CategoriesCounter'
-                    projects:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/Project'
-
-    Project:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        status:
-          type: string
-        client:
-          $ref: '#/components/schemas/CompanyEntityBase'
-        budget:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/ProjectBudget'
-        image_ids:
-          type: array
-          nullable: true
-          items:
-            type: integer
-
-    ProjectBudget:
-      type: object
-      properties:
-        id:
-          type: integer
-        amount:
-          type: number
-        currency:
-          type: string
-        exchange_rate:
-          type: number
-    
-    CreateProjectBudget:
-      type: object
-      properties:
-        amount:
-          type: number
-        currency:
-          type: string
-        exchange_rate:
-          type: number
-
-    CreateProjectSupplier:
-      type: object
-      properties:
-        amount:
-          type: number
-        currency:
-          type: string
-        exchangeRate:
-          type: number
-        comment:
-          type: string
-        supplierId:
-          type: integer
-    
-    CategoriesCounter:
-      type: object
-      properties:
-        awaiting_contact:
-          type: integer
-        in_progress:
-          type: integer
-        finished:
-          type: integer
-        canceled:
-          type: integer
-
-    ClientList:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        client_type:
-          type: string
-        website:
-          type: string
-          nullable: true
-        manager_user:
-          $ref: '#/components/schemas/Manager'
-        contact_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonDetails'
-        last_project:
-          type: object
-          nullable: true
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-        last_event:
-          type: object
-          nullable: true
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            date_add_con_start:
-              type: string
-              format: date-time
-            date_add_decon_end:
-              type: string
-              format: date-time
-
-    ProjectList:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 8
-        name:
-          type: string
-          example: "Some project 2"
-        manager_user:
-          $ref: '#/components/schemas/Manager'
-        area:
-          type: number
-          example: 120.5
-        total_budget:
-          type: number
-          example: 25000
-        status:
-          type: string
-          example: "design approved"
-        category:
-          type: string
-          example: "exclusive"
-        client:
-          $ref: '#/components/schemas/CompanyEntityBase'
-        event_name:
-          type: string
-          example: "Форум Формуів"
-        addcondate:
-          type: string
-          format: date-time
-          example: "2025-04-29T00:00:00.000Z"
-        adddecondate:
-          type: string
-          format: date-time
-          example: "2025-05-09T00:00:00.000Z"
-
-    ProjectCreate:
-      type: object
-      description: The request body for creating a new project.
-      required:
-        - name
-        - category
-        - client_company_entity_id
-        - manager_user_id
-      properties:
-        name:
-          type: string
-          description: The name of the project.
-          example: "New Stand for Tech Expo"
-        area:
-          type: number
-          description: The area of the project in square meters.
-          nullable: true
-          example: 50.5
-        category:
-          type: string
-          description: The category of the project.
-          example: "exclusive"
-        status:
-          type: string
-          description: The initial status of the project.
-          nullable: true
-          example: "waiting for contact"
-        event_id:
-          type: integer
-          description: The ID of the event this project is associated with.
-          nullable: true
-          example: 1
-        client_company_entity_id:
-          type: integer
-          description: The ID of the client's company entity.
-          example: 1
-        manager_user_id:
-          type: integer
-          description: The ID of the user managing this project.
-          example: 3
-        userIds:
-          type: array
-          description: An array of additional user IDs to associate with the project.
-          items:
-            type: integer
-          example: [1, 2]
-
-    ProjectPatch:
-      type: object
-      description: The request body for partially updating a project. All fields are optional.
-      properties:
-        name:
-          type: string
-          description: The new name of the project.
-          example: "Updated Stand for Tech Expo"
-        area:
-          type: number
-          description: The new area of the project in square meters.
-          example: 60.0
-        category:
-          type: string
-          description: The new category of the project.
-          example: "standart"
-        status:
-          type: string
-          description: The new status of the project.
-          example: "design approved"
-        event_id:
-          type: integer
-          description: The new event ID for the project.
-          example: 1
-        client_company_entity_id:
-          type: integer
-          description: The new client company entity ID for the project.
-          example: 1
-        manager_user_id:
-          type: integer
-          description: The new managing user ID for the project.
-          example: 41
-
-    ProjectDetails:
-      type: object
-      description: Contains all detailed information about a single project.
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Gross exhibition stand"
-        area:
-          type: number
-          nullable: true
-          example: 0
-        category:
-          type: string
-          example: "exclusive"
-        status:
-          type: string
-          example: "waiting for contact"
-        manager:
-          $ref: '#/components/schemas/Manager'
-        event_name:
-          type: string
-          example: "Форум Стартапів"
-        client:
-          $ref: '#/components/schemas/ProjectClient'
-        users:
-          type: array
-          description: List of users associated with the project.
-          items:
-            $ref: '#/components/schemas/Manager'
-        budgets:
-          type: array
-          description: A list of budgets associated with the project in different currencies.
-          items:
-            $ref: '#/components/schemas/ProjectBudget'
-        suppliers:
-          type: array
-          description: A list of suppliers involved in the project and their associated costs.
-          items:
-            $ref: '#/components/schemas/ProjectSupplier'
-        comments:
-          type: array
-          description: Comments related to the project.
-          items:
-            $ref: '#/components/schemas/CommentDetails'
-        images:
-          type: array
-          description: A list of images associated with the project.
-          items:
-            $ref: '#/components/schemas/ProjectImage'
-            
-    ProjectImage:
-      type: object
-      description: Represents an image associated with a project.
-      properties:
-        id:
-          type: integer
-          description: The unique ID of the project-image link.
-          example: 50
-        project_id:
-          type: integer
-          description: The ID of the project.
-          example: 1
-        image_file_id:
-          type: integer
-          description: The ID of the actual image file in the image store.
-          example: 101
-
-    ProjectSupplier:
-      type: object
-      description: Represents a supplier's involvement in a project, including costs.
-      properties:
-        id:
-          type: integer
-          example: 1
-        amount:
-          type: number
-          nullable: true
-          example: 500.75
-        currency:
-          type: string
-          nullable: true
-          example: "eur"
-        exchange_rate:
-          type: number
-          nullable: true
-          example: 45.50
-        comment:
-          type: string
-          nullable: true
-          example: "For printing services"
-        supplier:
-          $ref: '#/components/schemas/SupplierSummary'
-
-    SupplierSummary:
-      type: object
-      description: A brief summary of a supplier company.
-      properties:
-        id:
-          type: integer
-          example: 2
-        name:
-          type: string
-          example: "Frahkfurt Exhibition Center"
-        logo_image_file_id:
-          type: integer
-          nullable: true
-          example: 205
-
-    ExhibitionCenterList:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        website:
-          type: string
-          nullable: true
-        manager_user:
-          $ref: '#/components/schemas/Manager'
-        contact_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonDetails'
-        last_event:
-          type: object
-          nullable: true
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            date_add_con_start:
-              type: string
-              format: date-time
-            date_add_decon_end:
-              type: string
-              format: date-time
-
-    SupplierList:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        website:
-          type: string
-          nullable: true
-        manager_user:
-          $ref: '#/components/schemas/Manager'
-        tags:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/SupplierTag'
-
-    CompanyEntityBase:
-      type: object
-      nullable: true
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        phone_number:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        website:
-          type: string
-          nullable: true
-
-    CompanyEntityDB:
-      type: object
-      properties:
-        id:
-          type: integer
-        type:
-          type: string
-        client_type:
-          type: string
-          nullable: true
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        phone_number:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        website:
-          type: string
-          nullable: true
-        manager_user_id:
-          type: integer
-          nullable: true
-
-    ClientCreate:
-      type: object
-      properties:
-        clientType:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        phoneNumber:
-          type: string
-        email:
-          type: string
-        website:
-          type: string
-        managerUserId:
-          type: integer
-
-    ExhibitionCenterCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        phoneNumber:
-          type: string
-        email:
-          type: string
-        website:
-          type: string
-        managerUserId:
-          type: integer
-
-    SupplierCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        phoneNumber:
-          type: string
-        email:
-          type: string
-        website:
-          type: string
-        managerUserId:
-          type: integer
-        tagIds:
-          type: array
-          items:
-            type: integer
-
-    ClientPatch:
-      type: object
-      description: Fields to partially update for a client.
-      properties:
-        clientType:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        phoneNumber:
-          type: string
-        email:
-          type: string
-        website:
-          type: string
-        managerUserId:
-          type: integer
-
-    SupplierPatch:
-      type: object
-      description: Fields to partially update for a supplier.
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        phoneNumber:
-          type: string
-        email:
-          type: string
-        website:
-          type: string
-        managerUserId:
-          type: integer
-
-    ClientDetails:
-      type: object
-      properties:
-        client:
-          $ref: '#/components/schemas/CompanyEntityDB'
-        contact_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonWithContacts'
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Address'
-        company_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyDetails'
-        comments:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommentDetails'
-
-    ExhibitionCenterDetails:
-      type: object
-      properties:
-        exhibitionCenter:
-          $ref: '#/components/schemas/CompanyEntityDB'
-        contact_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonWithContacts'
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Address'
-        company_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyDetails'
-        comments:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommentDetails'
-
-    SupplierDetails:
-      type: object
-      properties:
-        supplier:
-          $ref: '#/components/schemas/CompanyEntityDB'
-        contact_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContactPersonWithContacts'
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Address'
-        company_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyDetails'
-        comments:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommentDetails'
-        tags:
-          type: array
-          items:
-            $ref: '#/components/schemas/SupplierTag'
-
-    Address:
-      type: object
-      properties:
-        id:
-          type: integer
-        country:
-          type: string
-        city:
-          type: string
-        address:
-          type: string
-        google_maps_link:
-          type: string
-          format: uri
-          nullable: true
-        comment:
-          type: string
-          nullable: true
-
-    AddressCreate:
-      type: object
-      properties:
-        country:
-          type: string
-        city:
-          type: string
-        address:
-          type: string
-        googleMapsLink:
-          type: string
-        comment:
-          type: string
-
-    ContactPerson:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        position:
-          type: string
-          nullable: true
-        company_entity_id:
-          type: integer
-
-    ContactPersonCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        position:
-          type: string
-        phones:
-          type: array
-          items:
-            type: object
-            properties:
-              phone:
-                type: string
-              comment:
-                type: string
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              email:
-                type: string
-              comment:
-                type: string
-
-    ContactPersonDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        position:
-          type: string
-          nullable: true
-        company_entity_id:
-          type: integer
-        phones:
-          type: array
-          items:
-            type: object
-            properties:
-              phone:
-                type: string
-              comment:
-                type: string
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              email:
-                type: string
-              comment:
-                type: string
-
-    ContactPersonWithContacts:
-      allOf:
-        - $ref: '#/components/schemas/ContactPerson'
-        - type: object
-          properties:
-            phones:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  phone:
-                    type: string
-                  comment:
-                    type: string
-            emails:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  email:
-                    type: string
-                  comment:
-                    type: string
-
-    ContactPersonUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        position:
-          type: string
-        companyEntityId:
-          type: integer
-        phones:
-          type: array
-          items:
-            type: object
-            properties:
-              phone:
-                type: string
-              comment:
-                type: string
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              email:
-                type: string
-              comment:
-                type: string
-
-    CompanyDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        address:
-          type: string
-        payment_details:
-          type: string
-        comment:
-          type: string
-
-    CompanyDetailsCreate:
-      type: object
-      properties:
-        name:
-          type: string
-        address:
-          type: string
-        paymentDetails:
-          type: string
-        comment:
-          type: string
-
-    Comment:
-      type: object
-      properties:
-        id:
-          type: integer
-        comment:
-          type: string
-        company_entity_id:
-          type: integer
-        user_id:
-          type: integer
-
-    CommentCreate:
-      type: object
-      properties:
-        comment:
-          type: string
-
-    CommentDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-        comment:
-          type: string
-        user:
-          $ref: '#/components/schemas/Manager'
-
-    SupplierTag:
+    # Core Payload Objects Mappings
+    EnumItem:
       type: object
       properties:
         id:
@@ -3118,152 +1466,512 @@ components:
       properties:
         email:
           type: string
-          format: email
         password:
           type: string
 
     LoginResponse:
       type: object
       properties:
-        user_id:
+        userId:
           type: integer
         name:
           type: string
         token:
           type: string
+          format: uuid
 
-    UserInfo:
+    User:
       type: object
       properties:
         id:
           type: integer
         name:
           type: string
+        r2Key:
+          type: string
+        avatarImageUrl:
+          type: string
+        deleted:
+          type: boolean
 
-    Manager:
+    Project:
       type: object
-      nullable: true
       properties:
         id:
           type: integer
         name:
           type: string
-        avatar_image_file_id:
-          type: integer
-          nullable: true
-
-    CreateResponse:
-      type: object
-      properties:
-        message:
+        area:
           type: string
-        id:
-          type: integer
-
-    UpdateResponse:
-      type: object
-      properties:
-        message:
+        category:
+          $ref: '#/components/schemas/ProjectCategory'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        deleted:
+          type: boolean
+        createdAt:
           type: string
-        client:
-          type: object
-
-    MessageResponse:
-      type: object
-      properties:
-        message:
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        totalBudget:
           type: string
 
-    UploadImageResponse:
+    CreateProjectRequest:
       type: object
-      properties:
-        message:
-          type: string
-        imageId:
-          type: integer
-
-    ProjectClient:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: The unique identifier for the company entity.
-          example: 42
-        name:
-          type: string
-          description: The legal name of the company.
-          example: "Innovate Inc."
-        
-        contact_persons:
-          type: array
-          description: A list of contact persons associated with the company.
-          items:
-            $ref: '#/components/schemas/ProjectContactPerson' 
-          nullable: true
-
-        company_details:
-          type: array
-          description: A list of legal or administrative details for the company.
-          items:
-            $ref: '#/components/schemas/CompanyDetail' 
-          nullable: true
       required:
-        - id
         - name
-    ProjectContactPerson:
+        - manager
+        - category
+        - status
+        - client
+        - exhibition
+      properties:
+        name:
+          type: string
+        manager:
+          type: integer
+        area:
+          type: string
+        category:
+          $ref: '#/components/schemas/ProjectCategory'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        client:
+          type: integer
+        exhibition:
+          type: integer
+
+    PatchProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        manager:
+          type: integer
+        area:
+          type: string
+        category:
+          $ref: '#/components/schemas/ProjectCategory'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        client:
+          type: integer
+        exhibition:
+          type: integer
+
+    BudgetLedgerPayload:
+      type: object
+      required:
+        - amount
+        - currency
+        - exchangeRate
+      properties:
+        amount:
+          type: string
+        currency:
+          type: string
+        exchangeRate:
+          type: string
+
+    ProjectBudget:
       type: object
       properties:
         id:
           type: integer
+        amount:
+          type: string
+        currency:
+          type: string
+        exchangeRate:
+          type: string
+
+    CommentPayload:
+      type: object
+      required:
+        - comment
+      properties:
+        comment:
+          type: string
+
+    CreateProjectSupplierPayload:
+      type: object
+      required:
+        - amount
+        - currency
+        - exchangeRate
+        - supplier
+      properties:
+        amount:
+          type: string
+        currency:
+          type: string
+        exchangeRate:
+          type: string
+        comment:
+          type: string
+          default: ""
+        supplier:
+          type: integer
+
+    UpdateProjectSupplierPayload:
+      type: object
+      required:
+        - amount
+        - currency
+        - exchangeRate
+        - comment
+      properties:
+        amount:
+          type: string
+        currency:
+          type: string
+        exchangeRate:
+          type: string
+        comment:
+          type: string
+          default: ""
+
+    CreateClientPayload:
+      type: object
+      required:
+        - name
+        - description
+        - phoneNumber
+        - email
+        - website
+        - manager
+        - clientType
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+
+    PatchClientPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+
+    CreateExhibitionCenterPayload:
+      type: object
+      required:
+        - name
+        - description
+        - phoneNumber
+        - email
+        - website
+        - manager
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+
+    PatchExhibitionCenterPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+
+    CreateSupplierPayload:
+      type: object
+      required:
+        - name
+        - description
+        - phoneNumber
+        - email
+        - website
+        - manager
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+
+    PatchSupplierPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+
+    UpdateSupplierTagsPayload:
+      type: object
+      required:
+        - tags
+      properties:
+        tags:
+          type: array
+          items:
+            type: integer
+
+    CreateTagsPayload:
+      type: object
+      required:
+        - tags
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+
+    UpdateTagLabelPayload:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    CompanyDetailsPayload:
+      type: object
+      required:
+        - name
+        - address
+        - paymentDetails
+        - comment
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        paymentDetails:
+          type: string
+        comment:
+          type: string
+
+    AddressPayload:
+      type: object
+      required:
+        - country
+        - city
+        - address
+        - googleMapsLink
+        - comment
+      properties:
+        country:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        googleMapsLink:
+          type: string
+        comment:
+          type: string
+
+    ContactPersonPayload:
+      type: object
+      required:
+        - name
+        - position
+        - phoneNumbers
+        - emails
+      properties:
         name:
           type: string
         position:
           type: string
-        company_entity_id:
-          type: integer
-        phone_numbers:
+        phoneNumbers:
           type: array
           items:
-            $ref: '#/components/schemas/PhoneNumber'
-          nullable: true
+            type: object
+            required:
+              - phoneNumber
+              - comment
+            properties:
+              phoneNumber:
+                type: string
+              comment:
+                type: string
         emails:
           type: array
           items:
-            $ref: '#/components/schemas/Email'
-          nullable: true
-    PhoneNumber:
+            type: object
+            required:
+              - email
+              - comment
+            properties:
+              email:
+                type: string
+              comment:
+                type: string
+
+    ExhibitionPayload:
       type: object
+      required:
+        - shortName
+        - dates
+        - exhibitionTheme
       properties:
-        id:
+        shortName:
+          type: string
+        longName:
+          type: string
+          default: ""
+        dates:
+          type: object
+          required:
+            - exhibitionStart
+            - exhibitionEnd
+          properties:
+            addConStart:
+              type: string
+              format: date-time
+              nullable: true
+            conStart:
+              type: string
+              format: date-time
+              nullable: true
+            client:
+              type: string
+              format: date-time
+              nullable: true
+            exhibitionStart:
+              type: string
+              format: date-time
+            exhibitionEnd:
+              type: string
+              format: date-time
+            deconEnd:
+              type: string
+              format: date-time
+              nullable: true
+            addDeconEnd:
+              type: string
+              format: date-time
+              nullable: true
+        exhibitionTheme:
           type: integer
-        phone_number:
-          type: string
-        comment:
-          type: string
-        contact_person_id:
-          type: integer
-          
-    Email:
-      type: object
-      properties:
-        id:
-          type: integer
-        email:
-          type: string
-          format: email
-        comment:
-          type: string
-        contact_person_id:
+        projects:
+          type: array
+          items:
+            type: integer
+        exhibitionCenters:
+          type: array
+          items:
+            type: integer
+        organiser:
           type: integer
 
-    CompanyDetail:
+    ExhibitionThemePayload:
+      type: object
+      required:
+        - name
+        - organiser
+      properties:
+        name:
+          type: string
+        organiser:
+          type: integer
+        exhibitions:
+          type: array
+          items:
+            type: integer
+
+    TransformedExhibition:
       type: object
       properties:
-        id:
+        exhibition:
+          type: object
+          description: Exhibition schema detail excluding base lazy child project relationships lists components elements
+        projectTypes:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              counter:
+                $ref: '#/components/schemas/DashboardCounter'
+              managers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    manager:
+                      $ref: '#/components/schemas/User'
+                    counter:
+                      $ref: '#/components/schemas/DashboardCounter'
+                    projects:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Project'
+
+    DashboardCounter:
+      type: object
+      properties:
+        awaitingContract:
           type: integer
-        registration_number:
-          type: string
-        vat_id:
-          type: string
-        company_entity_id:
+        inProgress:
+          type: integer
+        finished:
+          type: integer
+        canceled:
           type: integer
