@@ -1,11 +1,14 @@
 openapi: 3.0.3
 info:
   title: Standpoint Backend API
+  description: Complete OpenAPI documentation generated from the application routing, Zod payload validation layer, and MikroORM database entity constraints.
   version: 1.0.0
-  description: API documentation for the Standpoint architecture and project management backend system.
 servers:
   - url: http://localhost:4000
-    description: Local development server
+    description: Local Development Server
+
+security:
+  - bearerAuth: []
 
 paths:
   # ==========================================
@@ -14,8 +17,7 @@ paths:
   /auth/login:
     post:
       summary: User Login
-      tags:
-        - Authentication
+      security: []
       requestBody:
         required: true
         content:
@@ -24,58 +26,50 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Login successful
+          description: Successfully authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-        '401':
-          description: Invalid credentials
         '400':
-          description: Validation error
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          description: Invalid email or password credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/logout:
     post:
       summary: User Logout
-      tags:
-        - Authentication
-      security:
-        - bearerAuth: []
       responses:
         '204':
-          description: Successfully logged out
+          description: Logged out successfully, token tracking destroyed
         '401':
-          description: Unauthorized
+          $ref: '#/components/responses/401Unauthorized'
         '500':
-          description: Internal Server Error
+          description: Context tracking exception (login token missing on request scope)
 
   /auth/user_info:
     get:
-      summary: Get current user info
-      tags:
-        - Authentication
-      security:
-        - bearerAuth: []
+      summary: Get Profile Info for Authenticated User
       responses:
         '200':
-          description: Current authenticated user details
+          description: Active user account data
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
-          description: Unauthorized
+          $ref: '#/components/responses/401Unauthorized'
 
   # ==========================================
-  # PAGE
+  # DASHBOARD PAGES
   # ==========================================
   /page/main:
     get:
-      summary: Fetch main dashboard page data filtered by date overlap
-      tags:
-        - Page
-      security:
-        - bearerAuth: []
+      summary: Fetch Main Dashboard Metric Layouts
       parameters:
         - name: dateFrom
           in: query
@@ -91,41 +85,36 @@ paths:
             format: date-time
       responses:
         '200':
-          description: Array of transformed exhibition and project dashboard data
+          description: Metric profile matrix matching selected dates
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/TransformedExhibition'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
 
   # ==========================================
-  # PROJECTS
+  # PROJECTS RESOURCE
   # ==========================================
   /project/enum:
     get:
-      summary: List all projects with simple name and id mapping
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Simple Id/Name Key Index of All Projects
       responses:
         '200':
-          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/EnumItem'
+                  $ref: '#/components/schemas/IdNameEnumItem'
 
   /project/:
     post:
-      summary: Create a new project
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Create Project Record
       requestBody:
         required: true
         content:
@@ -134,19 +123,17 @@ paths:
               $ref: '#/components/schemas/CreateProjectRequest'
       responses:
         '201':
-          description: Project created successfully
+          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
 
   /project/all:
     get:
-      summary: List and search all projects with pagination
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Retrieve Paginated List of Projects
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -208,7 +195,6 @@ paths:
             format: date-time
       responses:
         '200':
-          description: List of paginated projects
           content:
             application/json:
               schema:
@@ -223,28 +209,19 @@ paths:
 
   /project/{id}:
     get:
-      summary: Get details of a single project
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Find Single Project Profile by Id
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Project information populated with deep associations
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
         '404':
-          description: Project not found
+          $ref: '#/components/responses/404NotFound'
     patch:
-      summary: Update metadata details on an existing project
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Modify targeted attributes of an existing project
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -255,57 +232,48 @@ paths:
               $ref: '#/components/schemas/PatchProjectRequest'
       responses:
         '200':
-          description: Project updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
         '404':
-          description: Project not found
+          $ref: '#/components/responses/404NotFound'
     delete:
-      summary: Soft-delete a project
-      tags:
-        - Project
-      security:
-        - bearerAuth: []
+      summary: Soft-Delete Project Entry
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Project marked as deleted
+          description: Soft-delete state modified successfully
         '404':
-          description: Project not found
+          $ref: '#/components/responses/404NotFound'
 
-  # Project Budget Child Routing
+  # =/project/budget/
   /project/budget/:
     post:
-      summary: Create a target allocation record in project budget ledger
-      tags:
-        - Project Budget
-      security:
-        - bearerAuth: []
+      summary: Create Project Budget Item
       parameters:
-        - $ref: '#/components/parameters/projectQuery'
+        - name: project
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BudgetLedgerPayload'
+              $ref: '#/components/schemas/BudgetPayload'
       responses:
         '201':
-          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectBudget'
+
   /project/budget/{id}:
     patch:
-      summary: Update an amount record in budget allocation ledger
-      tags:
-        - Project Budget
-      security:
-        - bearerAuth: []
+      summary: Modify Project Budget Reference
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -313,32 +281,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BudgetLedgerPayload'
+              $ref: '#/components/schemas/BudgetPayload'
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectBudget'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
-      summary: Hard delete a project budget tracking line
-      tags:
-        - Project Budget
-      security:
-        - bearerAuth: []
+      summary: Hard-Delete Project Budget Record
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Removed
+          description: Purged from tracking infrastructure
 
-  # Project Comments Child Routing
+  # =/project/comment/
   /project/comment/:
     post:
-      summary: Add structural feedback comments against project tracker
-      tags:
-        - Project Comment
-      security:
-        - bearerAuth: []
+      summary: Post New Project Feedback Comment
       parameters:
-        - $ref: '#/components/parameters/projectQuery'
+        - name: project
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -347,14 +316,14 @@ paths:
               $ref: '#/components/schemas/CommentPayload'
       responses:
         '201':
-          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectComment'
+
   /project/comment/{id}:
     put:
-      summary: Rewrite existing project text commentary
-      tags:
-        - Project Comment
-      security:
-        - bearerAuth: []
+      summary: Update project commentary string text
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -365,29 +334,30 @@ paths:
               $ref: '#/components/schemas/CommentPayload'
       responses:
         '200':
-          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectComment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
-      summary: Soft-delete comment from client visibility
-      tags:
-        - Project Comment
-      security:
-        - bearerAuth: []
+      summary: Soft-Delete Project Comment Entry
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Removed
+          description: Flagged deleted state changed successfully
 
-  # Project Suppliers Tracking Child Routing
+  # =/project/supplier/
   /project/supplier/:
     post:
-      summary: Bind external processing supplier contract amounts to Project
-      tags:
-        - Project Supplier
-      security:
-        - bearerAuth: []
+      summary: Allocate External Cost Supplier to Project Pipeline
       parameters:
-        - $ref: '#/components/parameters/projectQuery'
+        - name: project
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -396,14 +366,14 @@ paths:
               $ref: '#/components/schemas/CreateProjectSupplierPayload'
       responses:
         '201':
-          description: Associated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectToSupplier'
+
   /project/supplier/{id}:
     patch:
-      summary: Mutate pricing on active supplier links inside project
-      tags:
-        - Project Supplier
-      security:
-        - bearerAuth: []
+      summary: Modify Allocation Variables of a Project Supplier Connection
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -414,30 +384,28 @@ paths:
               $ref: '#/components/schemas/UpdateProjectSupplierPayload'
       responses:
         '200':
-          description: Flushed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectToSupplier'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
-      summary: Hard remove a linked supplier pipeline from the structural project layout
-      tags:
-        - Project Supplier
-      security:
-        - bearerAuth: []
+      summary: Hard-Delete Project Supplier Link Mapping
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Decoupled
+          description: Entity record unlinked and dropped
 
-  # Project Images Upload Multi
+  # =/project/image
   /project/{id}/image:
     post:
-      summary: Upload array of images for production reference to S3/R2 storage tier
-      tags:
-        - Project Image
-      security:
-        - bearerAuth: []
+      summary: Upload Asset Graphics Batch for Project Tracking Array
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
@@ -451,40 +419,43 @@ paths:
                     format: binary
       responses:
         '201':
-          description: Upload context complete
+          description: Multi-part payload binary resolved and saved to object storage
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectImage'
+        '400':
+          description: File limit verification failed or images formatted incorrectly
+
   /project/image/{id}:
     delete:
-      summary: Unlink object from tracking map and wipe physical content off R2 cluster storage file index
-      tags:
-        - Project Image
-      security:
-        - bearerAuth: []
+      summary: Remove Cloudflare R2 Asset Key Object and drops Database Track
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Purged
+          description: Resource object storage file and mapping purged
 
   # ==========================================
-  # CLIENTS
+  # CLIENT MANAGEMENT
   # ==========================================
   /client/enum:
     get:
-      summary: List all client companies (Simple Enum)
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Fetch Simple Key List of All Tracking Clients
       responses:
         '200':
-          description: Array of identifier data pairs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IdNameEnumItem'
+
   /client/all:
     get:
-      summary: Paginated extraction of corporate profile system entities filtered to Client type structure mappings
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Retrieve Paginated List of Corporate Profiles Registered under Client Scope
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -512,41 +483,49 @@ paths:
             type: string
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClientCE'
+                  totalPages:
+                    type: integer
+
   /client/:
     post:
-      summary: Provision structural profile wrapper context detailing structural business entity metadata profiles
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Create Client Record Entity Type
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateClientPayload'
+              $ref: '#/components/schemas/CreateClientRequest'
       responses:
         '201':
-          description: Provisioned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCE'
+
   /client/{id}:
     get:
-      summary: Deep populated lookups against operational profiles
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Find Deep Populated Details of Unique Client Record Group
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCE'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
-      summary: Update general client company demographics details fields
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Partial Attribute Mutation of Selective Client Record Rows
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -554,42 +533,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchClientPayload'
+              $ref: '#/components/schemas/PatchClientRequest'
       responses:
         '200':
-          description: Mutated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCE'
     delete:
-      summary: System execution context for triggering client visibility toggles (Soft-Delete)
-      tags:
-        - Client
-      security:
-        - bearerAuth: []
+      summary: Apply Soft-Delete Flags across Selected Account Profiles
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Suspended
+          description: Flag updated successfully
 
   # ==========================================
   # EXHIBITION CENTERS
   # ==========================================
   /exhibition_center/enum:
     get:
-      summary: Simplified index context list endpoints returning Exhibition Center identification fields values mapping
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Simple Enumerated Name Map of Exhibition Centers
       responses:
         '200':
-          description: Complete index data extract arrays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IdNameEnumItem'
+
   /exhibition_center/all:
     get:
-      summary: Multi-criteria list operations for filtering matching structural infrastructure target nodes
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Query Paginated Exhibition Center Rows
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -609,14 +585,21 @@ paths:
             type: string
       responses:
         '200':
-          description: Collection match output contexts data pipelines
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExhibitionCenterCE'
+                  totalPages:
+                    type: integer
+
   /exhibition_center/:
     post:
-      summary: Core provisioning mappings for structural exhibition real estate node registry
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Register Unique Exhibition Grounds/Facility Center Track
       requestBody:
         required: true
         content:
@@ -625,25 +608,24 @@ paths:
               $ref: '#/components/schemas/CreateExhibitionCenterPayload'
       responses:
         '201':
-          description: Profile injected to ecosystem layers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionCenterCE'
+
   /exhibition_center/{id}:
     get:
-      summary: Inspect venue node context
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Detailed Facility Specifications View
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Complete domain parameters maps returns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionCenterCE'
     patch:
-      summary: Structural field mutation against site data metrics details indexes
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Partial Profile Corrections
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -654,39 +636,36 @@ paths:
               $ref: '#/components/schemas/PatchExhibitionCenterPayload'
       responses:
         '200':
-          description: Profile records adjusted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionCenterCE'
     delete:
-      summary: Flag infrastructure entry point as soft disabled within downstream tracking metrics view layers
-      tags:
-        - Exhibition Center
-      security:
-        - bearerAuth: []
+      summary: Soft-Delete Selected Location Centers
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Flagged out
+          description: Dropped active status visibility
 
   # ==========================================
-  # SUPPLIERS
+  # SUPPLIERS & TAGS
   # ==========================================
   /supplier/enum:
     get:
-      summary: Enum mappings across active provider units entries listing basic profiles indexes records mappings
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Fetch Indexed List of Active Providers
       responses:
         '200':
-          description: Complete active subset mapping lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IdNameEnumItem'
+
   /supplier/all:
     get:
-      summary: Extract operational vendor configurations bounded dynamically with assigned index reference attributes tags
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Fetch Paginated List of Third-Party Contractors/Suppliers
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -700,6 +679,10 @@ paths:
           in: query
           schema:
             type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
         - name: tags
           in: query
           style: form
@@ -708,20 +691,23 @@ paths:
             type: array
             items:
               type: integer
-        - name: search
-          in: query
-          schema:
-            type: string
       responses:
         '200':
-          description: Search output response arrays
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupplierCE'
+                  totalPages:
+                    type: integer
+
   /supplier/:
     post:
-      summary: Provision metadata settings context mapping out external supplier entries
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Register Supplier Profile
       requestBody:
         required: true
         content:
@@ -730,25 +716,24 @@ paths:
               $ref: '#/components/schemas/CreateSupplierPayload'
       responses:
         '201':
-          description: Persistence layout structured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierCE'
+
   /supplier/{id}:
     get:
-      summary: View granular profile details mappings assigned over targeted supplier identities entries
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Fetch Deep Component View of Designated Subcontractor Entry
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Comprehensive details object responses map data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierCE'
     patch:
-      summary: Adjust tracking properties inside vendor management module databases listings maps definitions
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Modify Assigned Account Fields for a Supplier Provider
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -759,25 +744,21 @@ paths:
               $ref: '#/components/schemas/PatchSupplierPayload'
       responses:
         '200':
-          description: Profiles flushed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierCE'
     delete:
-      summary: soft deletion wrapper around vendor structures entries layout trackers maps definitions lists
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Soft-Delete Supplier Track Profile
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: State value context mutated out
+          description: Flagged matching index state variables to true
+
   /supplier/{id}/tags:
     put:
-      summary: Overwrite and synchronize relation links connecting metadata classification tags mapping structures over specialized providers
-      tags:
-        - Supplier
-      security:
-        - bearerAuth: []
+      summary: Overwrite and Map Specific Array Track of Taxonomy Tags onto Supplier Profile
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -788,26 +769,26 @@ paths:
               $ref: '#/components/schemas/UpdateSupplierTagsPayload'
       responses:
         '200':
-          description: Re-indexed tag configuration state values returned outputs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierCE'
 
-  # Supplier Tag Metadata Management Sub-Routers
   /supplier/tag/all:
     get:
-      summary: List taxonomical metadata classifications applied inside supplier grouping strategies operations
-      tags:
-        - Supplier Tags
-      security:
-        - bearerAuth: []
+      summary: Get alphabetized index layout of all tags
       responses:
         '200':
-          description: Sorted categorization labels dataset mappings array list returns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupplierTag'
+
   /supplier/tag:
     post:
-      summary: Bulk input mapping pipeline optimizing new grouping categorization tag keys processing workflows
-      tags:
-        - Supplier Tags
-      security:
-        - bearerAuth: []
+      summary: Batch Generate Unique Tags
       requestBody:
         required: true
         content:
@@ -816,14 +797,17 @@ paths:
               $ref: '#/components/schemas/CreateTagsPayload'
       responses:
         '200':
-          description: Batch execution context state reports output payload containing records structures logs tracing status maps summaries
+          description: Executed safe checks and resolved matches array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagResult'
+
   /supplier/tag/{id}:
     put:
-      summary: System rename updates for metadata tags labels
-      tags:
-        - Supplier Tags
-      security:
-        - bearerAuth: []
+      summary: Rename Taxonomy Tag Entry
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -831,18 +815,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTagLabelPayload'
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
       responses:
         '200':
-          description: Label modified inside global classifications indices maps layers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierTag'
         '409':
-          description: Unique key structural verification constraint conflict errors mapping outputs
+          description: Unique string index name collision found
     delete:
-      summary: Execute label cleaning protocols removing targeted tax values strings trackers
-      tags:
-        - Supplier Tags
-      security:
-        - bearerAuth: []
+      summary: Remove Taxonomy Tag
       parameters:
         - $ref: '#/components/parameters/id'
         - name: force
@@ -852,22 +839,22 @@ paths:
             default: false
       responses:
         '204':
-          description: Hard wiped off context tree structure indices completely maps trackers definitions
+          description: Hard deleted matching taxonomy key
         '409':
-          description: Blocking integrity validation exception checks triggered (Active supplier attachments mapping structures found)
+          description: Attempt to delete key referenced elsewhere without explicitly toggling force parameters query parameter to true
 
   # ==========================================
-  # COMPANY ENTITY DETAILS
+  # COMPANY ASSOCIATED ENTITY SUB-COMPONENTS
   # ==========================================
   /company_entity/details:
     post:
-      summary: Bind structural operational data parameters context lines against an active corporate structure component wrapper records
-      tags:
-        - Company Entity Details
-      security:
-        - bearerAuth: []
+      summary: Bind Bank Payment Terms / Corporate Profile Data Details onto Parent Company Entity
       parameters:
-        - $ref: '#/components/parameters/companyEntityQuery'
+        - name: companyEntity
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -876,25 +863,24 @@ paths:
               $ref: '#/components/schemas/CompanyDetailsPayload'
       responses:
         '201':
-          description: Appended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
+
   /company_entity/details/{id}:
     get:
-      summary: Read legal accounting metadata context strings assigned inside specific identifier structures
-      tags:
-        - Company Entity Details
-      security:
-        - bearerAuth: []
+      summary: Get Financial Details Profile Model Object
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Processing successful returns schema metrics values context blocks elements map mappings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
     put:
-      summary: Update existing internal billing profiles properties fields mapping settings arrays
-      tags:
-        - Company Entity Details
-      security:
-        - bearerAuth: []
+      summary: Overwrite Details Properties Layer
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -905,31 +891,27 @@ paths:
               $ref: '#/components/schemas/CompanyDetailsPayload'
       responses:
         '200':
-          description: Persistence components adjusted successfully contexts layout configurations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetails'
     delete:
-      summary: Hard delete a company details profile
-      tags:
-        - Company Entity Details
-      security:
-        - bearerAuth: []
+      summary: Hard-Purge Account Corporate/Bank Data Rows Detail Index
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Flushed completely out of enterprise tracking storage engines metrics layers mappings
+          description: Target row data deleted
 
-  # ==========================================
-  # COMPANY ENTITY ADDRESS
-  # ==========================================
   /company_entity/address/:
     post:
-      summary: Map localization metadata coordinates attributes mappings tracking locations points arrays definitions
-      tags:
-        - Company Entity Address
-      security:
-        - bearerAuth: []
+      summary: Register Location Maps Address Row connected onto Core Company Profile
       parameters:
-        - $ref: '#/components/parameters/companyEntityQuery'
+        - name: companyEntity
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -938,25 +920,24 @@ paths:
               $ref: '#/components/schemas/AddressPayload'
       responses:
         '201':
-          description: Context bound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
   /company_entity/address/{id}:
     get:
-      summary: Inspect geospatial tracking reference nodes values attributes elements
-      tags:
-        - Company Entity Address
-      security:
-        - bearerAuth: []
+      summary: Fetch Location Coordinates
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Operational tracking parameters context elements output values data schema maps summaries structures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
     put:
-      summary: Re-index tracking criteria specifications mapping properties attributes over targets points models lists
-      tags:
-        - Company Entity Address
-      security:
-        - bearerAuth: []
+      summary: Full Parameter Payload Address Object Overwrite
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -967,58 +948,53 @@ paths:
               $ref: '#/components/schemas/AddressPayload'
       responses:
         '200':
-          description: Location metadata elements refreshed outputs inside localized maps definitions entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
     delete:
-      summary: Eliminate geocoding location parameters context nodes entries completely mappings
-      tags:
-        - Company Entity Address
-      security:
-        - bearerAuth: []
+      summary: Hard Delete Location Tracking Mapping Record Row
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Removed execution context data components tracks fields definitions metrics layouts
+          description: Dropped address track tracking lines
 
-  # ==========================================
-  # COMPANY ENTITY CONTACT PERSON
-  # ==========================================
   /company_entity/contact_person/:
     post:
-      summary: Link a new contact person to a business company profile account module layout index
-      tags:
-        - Company Entity Contact Person
-      security:
-        - bearerAuth: []
+      summary: Assign Representative Agent Contact Profile onto Company Account Record
       parameters:
-        - $ref: '#/components/parameters/companyEntityQuery'
+        - name: companyEntity
+          in: query
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactPersonPayload'
+              $ref: '#/components/schemas/CreateContactPersonPayload'
       responses:
         '201':
-          description: Injected pipeline record context elements outputs tracking details maps data lists structures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPerson'
+
   /company_entity/contact_person/{id}:
     get:
-      summary: Fetch structural configuration maps tracking individual human point context details values arrays definitions profiles
-      tags:
-        - Company Entity Contact Person
-      security:
-        - bearerAuth: []
+      summary: Fetch Targeted Agent Identity Details
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Target elements returns success maps contexts arrays
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPerson'
     put:
-      summary: Structural update mapping corrections applied down inside client management point contexts definitions models
-      tags:
-        - Company Entity Contact Person
-      security:
-        - bearerAuth: []
+      summary: Full Payload Update of Contact Records
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -1026,67 +1002,66 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactPersonPayload'
+              $ref: '#/components/schemas/CreateContactPersonPayload'
       responses:
         '200':
-          description: Flushed parameters profiles state context map details adjusted outputs fields values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPerson'
     delete:
-      summary: Execute cleanup operations removing reference accounts completely mappings contexts profiles data lists trackers
-      tags:
-        - Company Entity Contact Person
-      security:
-        - bearerAuth: []
+      summary: Hard Delete Representative Profile mapping completely
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Deleted record maps files entries contexts workflows structures layers listings tracking modules
+          description: Contact person profile dropped
 
-  # ==========================================
-  # COMPANY ENTITY LOGO
-  # ==========================================
   /company_entity/{id}/logo/:
     post:
-      summary: Stream binary media image structures updating tracking configurations branding contexts variables parameters
-      tags:
-        - Company Entity Logo
-      security:
-        - bearerAuth: []
+      summary: Process and Assign Single Graphic Logo image on designated Company Profile Record
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
               type: object
+              required: [image]
               properties:
                 image:
                   type: string
                   format: binary
       responses:
         '201':
-          description: Brand dynamic asset uploaded matching entries profiles storage routes contexts maps definitions configurations
+          description: Binary mapped, old Cloudflare R2 graphics asset cleaned up, entity tracking strings flushed
 
   # ==========================================
-  # EXHIBITIONS
+  # EXHIBITIONS MANAGEMENT
   # ==========================================
   /exhibition/enum:
     get:
-      summary: Extraction mapping parameters output array context summaries matching running exhibitions profiles details list indexes mappings
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Enumerate Essential Identifiers for All Exhibitions
       responses:
         '200':
-          description: Enum structures tracking vectors items maps definitions returned outputs responses data matrices layouts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    shortName:
+                      type: string
+                    longName:
+                      type: string
+
   /exhibition/all:
     get:
-      summary: Search layout structures filtering active global operational trade schedules frameworks timelines variables trackers maps definitions
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Query Paginated Timeline of Exhibitions
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -1116,14 +1091,21 @@ paths:
             format: date-time
       responses:
         '200':
-          description: Paginated response array records outputs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Exhibition'
+                  totalPages:
+                    type: integer
+
   /exhibition/:
     post:
-      summary: Inject schedule architecture tracking models outlining new trade exhibit context definitions
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Form New Exhibition Context Calendar Profile
       requestBody:
         required: true
         content:
@@ -1132,25 +1114,24 @@ paths:
               $ref: '#/components/schemas/ExhibitionPayload'
       responses:
         '201':
-          description: Instantiated setup variables
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exhibition'
+
   /exhibition/{id}:
     get:
-      summary: Detailed mapping inspect against specific target venue timelines setup schedules configurations mappings arrays data loops
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Extract Unified Exhibition Data Object View
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exhibition'
     put:
-      summary: Total transactional replacement update processing targeting historical structures context tracking indices elements values
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Systematically Replace/Overwrite targeted Exhibition Profile parameters
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -1161,39 +1142,37 @@ paths:
               $ref: '#/components/schemas/ExhibitionPayload'
       responses:
         '201':
-          description: System overwritten contexts flushed adjustments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exhibition'
     delete:
-      summary: Flag entry out of active downstream scheduling routines layers pipelines calculations maps tracking indices dashboards lists
-      tags:
-        - Exhibition
-      security:
-        - bearerAuth: []
+      summary: Apply Soft-Delete Configuration properties onto active Exhibition Profile Record
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Deactivation state applied
+          description: Dropped active scope matrix visibility flags
 
   # ==========================================
   # EXHIBITION THEMES
+  # =/exhibition_theme
   # ==========================================
   /exhibition_theme/enum:
     get:
-      summary: List all exhibition themes (Simple Enum)
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Retrieve Id and String name keys of themes
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IdNameEnumItem'
+
   /exhibition_theme/:
     post:
-      summary: Create a new exhibition theme classification template
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Create New Exhibition Core Theme Context Class
       requestBody:
         required: true
         content:
@@ -1202,14 +1181,14 @@ paths:
               $ref: '#/components/schemas/ExhibitionThemePayload'
       responses:
         '201':
-          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionTheme'
+
   /exhibition_theme/all:
     get:
-      summary: Retrieve all exhibition theme context models configurations filtered under search params layout parameters metrics trees
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Paginated Evaluation Profile Listing of Exhibition Themes
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/rawPageSize'
@@ -1229,25 +1208,31 @@ paths:
             type: integer
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExhibitionTheme'
+                  totalPages:
+                    type: integer
+
   /exhibition_theme/{id}:
     get:
-      summary: Inspect schema parameters maps describing targeting theme definitions variables logs traces summaries objects
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Extract structural schema layout of targeted Theme Profile Data Node
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Success returns schema mapping outputs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionTheme'
     put:
-      summary: Overwrite data structures properties mapped down onto specialized active context indices lists nodes setup templates metrics elements
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Fully overwrite system variables of chosen Theme Group Configuration
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -1258,104 +1243,88 @@ paths:
               $ref: '#/components/schemas/ExhibitionThemePayload'
       responses:
         '201':
-          description: Completely replaced mapping details output contexts elements configurations metrics matrices layout definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExhibitionTheme'
     delete:
-      summary: Soft-delete an exhibition theme template configuration path layout element module index tree node tracker mapping maps
-      tags:
-        - Exhibition Theme
-      security:
-        - bearerAuth: []
+      summary: Soft Delete Exhibition Theme Category File tracking indices
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
         '204':
-          description: Successfully tagged down structural reference frameworks visibility configurations variables fields states profiles lists
+          description: Flag altered changed visibility constraints matching downstream filters
 
   # ==========================================
-  # ENUMS METADATA LOOKUPS
+  # ENUMS VALUE SERVICE POOLS
   # ==========================================
   /enum/company_entity_types:
     get:
-      summary: Enumerate valid data structure states for classification settings (CompanyEntityType)
-      tags:
-        - Enums Lookups
-      security:
-        - bearerAuth: []
+      summary: Get All System Enum Array Values for CompanyEntity categories
       responses:
         '200':
-          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/CompanyEntityType'
 
   /enum/client_types:
     get:
-      summary: Enumerate public vs private operational metrics types values assigned profiles categories structures (ClientType)
-      tags:
-        - Enums Lookups
-      security:
-        - bearerAuth: []
+      summary: Get system operational values for Client Grouping categorization
       responses:
         '200':
-          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/ClientType'
 
   /enum/project_categories:
     get:
-      summary: Enumerate design architectural build complexities targets parameters fields (ProjectCategory)
-      tags:
-        - Enums Lookups
-      security:
-        - bearerAuth: []
+      summary: Get functional category tracking system tags
       responses:
         '200':
-          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/ProjectCategory'
 
   /enum/project_statuses:
     get:
-      summary: Enumerate pipeline production life cycle phases elements metrics sequences indices paths (ProjectStatus)
-      tags:
-        - Enums Lookups
-      security:
-        - bearerAuth: []
+      summary: Return array listing state options for Project Pipeline Cycles
       responses:
         '200':
-          description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/ProjectStatus'
 
   /enum/managers:
     get:
-      summary: List account references identities records to map management contexts variables (Users index simple profiles)
-      tags:
-        - Enums Lookups
-      security:
-        - bearerAuth: []
+      summary: Return Quick Identity profile tags list of platform Operational Managers
       responses:
         '200':
-          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    avatarImageUrl:
+                      type: string
 
-# ==========================================
-# COMPONENTS AND SCHEMAS DEFINITIONS SPEC
-# ==========================================
 components:
   securitySchemes:
     bearerAuth:
@@ -1374,6 +1343,7 @@ components:
       in: query
       schema:
         type: integer
+        minimum: 1
         default: 1
     rawPageSize:
       name: rawPageSize
@@ -1396,21 +1366,52 @@ components:
         type: string
         enum: [asc, desc]
         default: desc
-    projectQuery:
-      name: project
-      in: query
-      required: true
-      schema:
-        type: integer
-    companyEntityQuery:
-      name: companyEntity
-      in: query
-      required: true
-      schema:
-        type: integer
 
+  responses:
+    400BadRequest:
+      description: Bad Parameter Arguments / Zod Schema Payload Execution Throw Violation / DB ForeignKey Contraint Exception
+      headers:
+        x-request-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    401Unauthorized:
+      description: Authentication Context Verification Throw Exception, Token Mismatch/Missing or Expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404NotFound:
+      description: Record Database Reference query returned zero rows match
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # ==========================================
+  # ENUMS, PAYLOADS & ENTITY SCHEMAS
+  # ==========================================
   schemas:
-    # Enums Definition Maps
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    IdNameEnumItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
     ProjectStatus:
       type: string
       enum:
@@ -1431,38 +1432,19 @@ components:
 
     ProjectCategory:
       type: string
-      enum:
-        - EXCLUSIVE
-        - STANDART
-        - PIDVIS
+      enum: [EXCLUSIVE, STANDART, PIDVIS]
 
     CompanyEntityType:
       type: string
-      enum:
-        - SUPPLIER
-        - EXHIBITION_CENTER
-        - CLIENT
+      enum: [SUPPLIER, EXHIBITION_CENTER, CLIENT]
 
     ClientType:
       type: string
-      enum:
-        - PUBLIC
-        - PRIVATE
-
-    # Core Payload Objects Mappings
-    EnumItem:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
+      enum: [PUBLIC, PRIVATE]
 
     LoginRequest:
       type: object
-      required:
-        - email
-        - password
+      required: [email, password]
       properties:
         email:
           type: string
@@ -1489,10 +1471,55 @@ components:
           type: string
         r2Key:
           type: string
-        avatarImageUrl:
-          type: string
         deleted:
           type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        avatarImageUrl:
+          type: string
+
+    TransformedExhibition:
+      type: object
+      properties:
+        exhibition:
+          type: object
+          description: Exhibition object properties without embedded metrics array reference mapping.
+        projectTypes:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              counter:
+                $ref: '#/components/schemas/MetricsCounter'
+              managers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    manager:
+                      $ref: '#/components/schemas/User'
+                    counter:
+                      $ref: '#/components/schemas/MetricsCounter'
+                    projects:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Project'
+
+    MetricsCounter:
+      type: object
+      properties:
+        awaitingContract:
+          type: integer
+        inProgress:
+          type: integer
+        finished:
+          type: integer
+        canceled:
+          type: integer
 
     Project:
       type: object
@@ -1517,16 +1544,16 @@ components:
           format: date-time
         totalBudget:
           type: string
+        exhibition:
+          type: object
+        client:
+          $ref: '#/components/schemas/ClientCE'
+        manager:
+          $ref: '#/components/schemas/User'
 
     CreateProjectRequest:
       type: object
-      required:
-        - name
-        - manager
-        - category
-        - status
-        - client
-        - exhibition
+      required: [name, manager, category, status, client, exhibition]
       properties:
         name:
           type: string
@@ -1561,12 +1588,9 @@ components:
         exhibition:
           type: integer
 
-    BudgetLedgerPayload:
+    BudgetPayload:
       type: object
-      required:
-        - amount
-        - currency
-        - exchangeRate
+      required: [amount, currency, exchangeRate]
       properties:
         amount:
           type: string
@@ -1586,22 +1610,41 @@ components:
           type: string
         exchangeRate:
           type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     CommentPayload:
       type: object
-      required:
-        - comment
+      required: [comment]
       properties:
         comment:
           type: string
 
+    ProjectComment:
+      type: object
+      properties:
+        id:
+          type: integer
+        comment:
+          type: string
+        deleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+
     CreateProjectSupplierPayload:
       type: object
-      required:
-        - amount
-        - currency
-        - exchangeRate
-        - supplier
+      required: [amount, currency, exchangeRate, supplier]
       properties:
         amount:
           type: string
@@ -1617,11 +1660,7 @@ components:
 
     UpdateProjectSupplierPayload:
       type: object
-      required:
-        - amount
-        - currency
-        - exchangeRate
-        - comment
+      required: [amount, currency, exchangeRate]
       properties:
         amount:
           type: string
@@ -1633,16 +1672,80 @@ components:
           type: string
           default: ""
 
-    CreateClientPayload:
+    ProjectToSupplier:
       type: object
-      required:
-        - name
-        - description
-        - phoneNumber
-        - email
-        - website
-        - manager
-        - clientType
+      properties:
+        id:
+          type: integer
+        amount:
+          type: string
+        currency:
+          type: string
+        exchangeRate:
+          type: string
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProjectImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        r2Key:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClientCE:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          $ref: '#/components/schemas/CompanyEntityType'
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        r2Key:
+          type: string
+        logoUrl:
+          type: string
+          nullable: true
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+        deleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        manager:
+          $ref: '#/components/schemas/User'
+
+    CreateClientRequest:
+      type: object
+      required: [name, description, phoneNumber, email, website, manager, clientType]
       properties:
         name:
           type: string
@@ -1659,7 +1762,7 @@ components:
         clientType:
           $ref: '#/components/schemas/ClientType'
 
-    PatchClientPayload:
+    PatchClientRequest:
       type: object
       properties:
         name:
@@ -1679,13 +1782,7 @@ components:
 
     CreateExhibitionCenterPayload:
       type: object
-      required:
-        - name
-        - description
-        - phoneNumber
-        - email
-        - website
-        - manager
+      required: [name, description, phoneNumber, email, website, manager]
       properties:
         name:
           type: string
@@ -1711,20 +1808,35 @@ components:
           type: string
         email:
           type: string
+          format: email
         website:
           type: string
         manager:
           type: integer
 
+    ExhibitionCenterCE:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          $ref: '#/components/schemas/CompanyEntityType'
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          $ref: '#/components/schemas/User'
+
     CreateSupplierPayload:
       type: object
-      required:
-        - name
-        - description
-        - phoneNumber
-        - email
-        - website
-        - manager
+      required: [name, description, phoneNumber, email, website, manager]
       properties:
         name:
           type: string
@@ -1763,42 +1875,86 @@ components:
           items:
             type: integer
 
+    SupplierCE:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          $ref: '#/components/schemas/CompanyEntityType'
+        name:
+          type: string
+        description:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        website:
+          type: string
+        manager:
+          $ref: '#/components/schemas/User'
+
     UpdateSupplierTagsPayload:
       type: object
-      required:
-        - tags
+      required: [tags]
       properties:
         tags:
           type: array
           items:
             type: integer
 
+    SupplierTag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     CreateTagsPayload:
       type: object
-      required:
-        - tags
+      required: [tags]
       properties:
         tags:
           type: array
           items:
             type: string
 
-    UpdateTagLabelPayload:
+    TagResult:
       type: object
-      required:
-        - name
       properties:
-        name:
+        tag:
+          $ref: '#/components/schemas/SupplierTag'
+        created:
+          type: boolean
+        reason:
           type: string
 
     CompanyDetailsPayload:
       type: object
-      required:
-        - name
-        - address
-        - paymentDetails
-        - comment
+      required: [name, address, paymentDetails, comment]
       properties:
+        name:
+          type: string
+        address:
+          type: string
+        paymentDetails:
+          type: string
+        comment:
+          type: string
+
+    CompanyDetails:
+      type: object
+      properties:
+        id:
+          type: integer
         name:
           type: string
         address:
@@ -1810,12 +1966,7 @@ components:
 
     AddressPayload:
       type: object
-      required:
-        - country
-        - city
-        - address
-        - googleMapsLink
-        - comment
+      required: [country, city, address, googleMapsLink, comment]
       properties:
         country:
           type: string
@@ -1828,13 +1979,25 @@ components:
         comment:
           type: string
 
-    ContactPersonPayload:
+    Address:
       type: object
-      required:
-        - name
-        - position
-        - phoneNumbers
-        - emails
+      properties:
+        id:
+          type: integer
+        country:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        googleMapsLink:
+          type: string
+        comment:
+          type: string
+
+    CreateContactPersonPayload:
+      type: object
+      required: [name, position, phoneNumbers, emails]
       properties:
         name:
           type: string
@@ -1844,9 +2007,7 @@ components:
           type: array
           items:
             type: object
-            required:
-              - phoneNumber
-              - comment
+            required: [phoneNumber, comment]
             properties:
               phoneNumber:
                 type: string
@@ -1856,21 +2017,26 @@ components:
           type: array
           items:
             type: object
-            required:
-              - email
-              - comment
+            required: [email, comment]
             properties:
               email:
                 type: string
               comment:
                 type: string
 
+    ContactPerson:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        position:
+          type: string
+
     ExhibitionPayload:
       type: object
-      required:
-        - shortName
-        - dates
-        - exhibitionTheme
+      required: [shortName, dates, exhibitionTheme]
       properties:
         shortName:
           type: string
@@ -1879,22 +2045,17 @@ components:
           default: ""
         dates:
           type: object
-          required:
-            - exhibitionStart
-            - exhibitionEnd
+          required: [exhibitionStart, exhibitionEnd]
           properties:
             addConStart:
               type: string
               format: date-time
-              nullable: true
             conStart:
               type: string
               format: date-time
-              nullable: true
             client:
               type: string
               format: date-time
-              nullable: true
             exhibitionStart:
               type: string
               format: date-time
@@ -1904,11 +2065,9 @@ components:
             deconEnd:
               type: string
               format: date-time
-              nullable: true
             addDeconEnd:
               type: string
               format: date-time
-              nullable: true
         exhibitionTheme:
           type: integer
         projects:
@@ -1922,11 +2081,36 @@ components:
         organiser:
           type: integer
 
+    Exhibition:
+      type: object
+      properties:
+        id:
+          type: integer
+        shortName:
+          type: string
+        longName:
+          type: string
+        deleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        dates:
+          type: object
+          properties:
+            exhibitionStart:
+              type: string
+              format: date
+            exhibitionEnd:
+              type: string
+              format: date
+
     ExhibitionThemePayload:
       type: object
-      required:
-        - name
-        - organiser
+      required: [name, organiser]
       properties:
         name:
           type: string
@@ -1937,41 +2121,18 @@ components:
           items:
             type: integer
 
-    TransformedExhibition:
+    ExhibitionTheme:
       type: object
       properties:
-        exhibition:
-          type: object
-          description: Exhibition schema detail excluding base lazy child project relationships lists components elements
-        projectTypes:
-          type: object
-          additionalProperties:
-            type: object
-            properties:
-              counter:
-                $ref: '#/components/schemas/DashboardCounter'
-              managers:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    manager:
-                      $ref: '#/components/schemas/User'
-                    counter:
-                      $ref: '#/components/schemas/DashboardCounter'
-                    projects:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/Project'
-
-    DashboardCounter:
-      type: object
-      properties:
-        awaitingContract:
+        id:
           type: integer
-        inProgress:
-          type: integer
-        finished:
-          type: integer
-        canceled:
-          type: integer
+        name:
+          type: string
+        deleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
